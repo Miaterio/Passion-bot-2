@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from 'react';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { getLocale } from 'next-intl/server';
 
 import { Root } from '@/components/Root/Root';
@@ -12,6 +12,15 @@ import './_assets/globals.css';
 export const metadata: Metadata = {
   title: 'Your Application Title Goes Here',
   description: 'Your application description goes here',
+};
+
+// Critical viewport configuration for safe area support
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover', // CRITICAL: Allows app to extend into unsafe areas
 };
 
 export default async function RootLayout({ children }: PropsWithChildren) {

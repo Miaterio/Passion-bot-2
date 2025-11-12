@@ -1,4 +1,4 @@
-import { mockTelegramEnv, isTMA, emitEvent } from '@telegram-apps/sdk-react';
+import { mockTelegramEnv, isTMA } from '@tma.js/sdk-react';
 
 // It is important, to mock the environment only for development purposes. When building the
 // application, the code inside will be tree-shaken, so you will not see it in your final bundle.
@@ -25,26 +25,6 @@ export async function mockEnv(): Promise<void> {
       const noInsets = { left: 0, top: 0, bottom: 0, right: 0 } as const;
   
       mockTelegramEnv({
-        onEvent(e) {
-          // Here you can write your own handlers for all known Telegram Mini Apps methods.
-          if (e[0] === 'web_app_request_theme') {
-            return emitEvent('theme_changed', { theme_params: themeParams });
-          }
-          if (e[0] === 'web_app_request_viewport') {
-            return emitEvent('viewport_changed', {
-              height: window.innerHeight,
-              width: window.innerWidth,
-              is_expanded: true,
-              is_state_stable: true,
-            });
-          }
-          if (e[0] === 'web_app_request_content_safe_area') {
-            return emitEvent('content_safe_area_changed', noInsets);
-          }
-          if (e[0] === 'web_app_request_safe_area') {
-            return emitEvent('safe_area_changed', noInsets);
-          }
-        },
         launchParams: new URLSearchParams([
           // Discover more launch parameters:
           // https://docs.telegram-mini-apps.com/platform/launch-parameters#parameters-list

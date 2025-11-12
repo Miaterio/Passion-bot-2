@@ -6,12 +6,14 @@ import {
   miniApp,
   useLaunchParams,
   useSignal,
-} from '@telegram-apps/sdk-react';
+} from '@tma.js/sdk-react';
 import { TonConnectUIProvider } from '@tonconnect/ui-react';
 import { AppRoot } from '@telegram-apps/telegram-ui';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { ErrorPage } from '@/components/ErrorPage';
+import { SafeAreaProvider } from '@/components/SafeAreaProvider';
+import { TMAInitializer } from '@/components/TMAInitializer';
 import { useDidMount } from '@/hooks/useDidMount';
 import { setLocale } from '@/core/i18n/locale';
 
@@ -36,7 +38,10 @@ function RootInner({ children }: PropsWithChildren) {
           ['macos', 'ios'].includes(lp.tgWebAppPlatform) ? 'ios' : 'base'
         }
       >
-        {children}
+        <TMAInitializer />
+        <SafeAreaProvider>
+          {children}
+        </SafeAreaProvider>
       </AppRoot>
     </TonConnectUIProvider>
   );

@@ -1,0 +1,1 @@
+export { TMAInitializer } from './TMAInitializer';

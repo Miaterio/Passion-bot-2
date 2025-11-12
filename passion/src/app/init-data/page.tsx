@@ -3,11 +3,10 @@
 
 import { useMemo } from 'react';
 import {
-  initDataRaw as _initDataRaw,
-  initDataState as _initDataState,
+  initData,
   type User,
   useSignal,
-} from '@telegram-apps/sdk-react';
+} from '@tma.js/sdk-react';
 import { List, Placeholder } from '@telegram-apps/telegram-ui';
 
 import {
@@ -21,49 +20,43 @@ function getUserRows(user: User): DisplayDataRow[] {
 }
 
 export default function InitDataPage() {
-  const initDataRaw = useSignal(_initDataRaw);
-  const initDataState = useSignal(_initDataState);
+  const initDataRaw = useSignal(initData.raw);
+  const user = useSignal(initData.user);
+  const receiver = useSignal(initData.receiver);
+  const chat = useSignal(initData.chat);
+  const authDate = useSignal(initData.authDate);
+  const hash = useSignal(initData.hash);
+  const queryId = useSignal(initData.queryId);
+  const startParam = useSignal(initData.startParam);
 
   const initDataRows = useMemo<DisplayDataRow[] | undefined>(() => {
-    if (!initDataState || !initDataRaw) {
+    if (!initDataRaw) {
       return;
     }
-    return [
-      { title: 'raw', value: initDataRaw },
-      ...Object.entries(initDataState).reduce<DisplayDataRow[]>(
-        (acc, [title, value]) => {
-          if (value instanceof Date) {
-            acc.push({ title, value: value.toISOString() });
-          } else if (!value || typeof value !== 'object') {
-            acc.push({ title, value });
-          }
-          return acc;
-        },
-        [],
-      ),
-    ];
-  }, [initDataState, initDataRaw]);
+    const rows: DisplayDataRow[] = [{ title: 'raw', value: initDataRaw }];
+    if (authDate) rows.push({ title: 'authDate', value: authDate.toISOString() });
+    if (hash) rows.push({ title: 'hash', value: hash });
+    if (queryId) rows.push({ title: 'queryId', value: queryId });
+    if (startParam) rows.push({ title: 'startParam', value: startParam });
+    return rows;
+  }, [initDataRaw, authDate, hash, queryId, startParam]);
 
   const userRows = useMemo<DisplayDataRow[] | undefined>(() => {
-    return initDataState && initDataState.user
-      ? getUserRows(initDataState.user)
-      : undefined;
-  }, [initDataState]);
+    return user ? getUserRows(user) : undefined;
+  }, [user]);
 
   const receiverRows = useMemo<DisplayDataRow[] | undefined>(() => {
-    return initDataState && initDataState.receiver
-      ? getUserRows(initDataState.receiver)
-      : undefined;
-  }, [initDataState]);
+    return receiver ? getUserRows(receiver) : undefined;
+  }, [receiver]);
 
   const chatRows = useMemo<DisplayDataRow[] | undefined>(() => {
-    return !initDataState?.chat
+    return !chat
       ? undefined
-      : Object.entries(initDataState.chat).map(([title, value]) => ({
+      : Object.entries(chat).map(([title, value]) => ({
           title,
           value,
         }));
-  }, [initDataState]);
+  }, [chat]);
 
   if (!initDataRows) {
     return (
