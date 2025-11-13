@@ -2,13 +2,23 @@
 
 <cite>
 **Referenced Files in This Document**   
-- [init.ts](file://passion/src/core/init.ts)
-- [globals.css](file://passion/src/app/_assets/globals.css)
-- [Link.css](file://passion/src/components/Link/Link.css)
-- [styles.css](file://passion/src/components/Root/styles.css)
-- [mockEnv.ts](file://passion/src/mockEnv.ts)
-- [page.tsx](file://passion/src/app/theme-params/page.tsx)
+- [init.ts](file://passion/src/core/init.ts) - *Updated for @tma.js/sdk v3.x migration*
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx) - *New initialization component with timeout protection*
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx) - *Manual safe area handling via signals*
+- [globals.css](file://passion/src/app/_assets/globals.css) - *Global styles with safe area container*
+- [mockEnv.ts](file://passion/src/mockEnv.ts) - *Environment mocking for development*
+- [page.tsx](file://passion/src/app/theme-params/page.tsx) - *Theme parameters inspection*
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Updated initialization pattern to reflect migration from @telegram-apps/sdk-react to @tma.js/sdk v3.x
+- Added new TMAInitializer component as primary initialization point
+- Revised data flow to use individual mount() calls instead of mountMiniAppSync
+- Added timeout protection for viewport.mount() to prevent hanging on macOS
+- Ensured miniApp.ready() is called in finally block for guaranteed initialization signaling
+- Clarified that bindCssVars() only creates viewport dimension variables, not safe area variables
+- Updated section sources to reflect actual file locations and changes
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -25,57 +35,70 @@
 This document details the integration system for theme and viewport parameters in Telegram Mini Apps, focusing on how the application dynamically adapts its UI to Telegram's native themes and device-specific viewport constraints. It explains the role of `bindThemeParamsCssVars` and `bindViewportCssVars` in mapping platform-specific parameters to CSS custom properties, enabling seamless visual consistency across light and dark modes and various device screen layouts.
 
 **Section sources**
-- [init.ts](file://passion/src/core/init.ts#L1-L83)
+- [init.ts](file://passion/src/core/init.ts#L22-L155)
 
 ## Theme and Viewport Integration Overview
 The integration system ensures that the Mini App's user interface reflects the current Telegram theme (light/dark) and respects device-specific safe areas (such as notches or rounded corners). This is achieved by synchronizing Telegram's runtime parameters with CSS variables, which are then used throughout the component styles.
 
-The initialization process in `init.ts` orchestrates the mounting of key SDK components, including theme and viewport handlers. When available, `mountMiniAppSync` and `mountViewport` are invoked to establish real-time communication with the Telegram client, followed by binding functions that expose these parameters as CSS variables.
+The initialization process has been updated to use the @tma.js/sdk v3.x pattern with individual component mounting. The new TMAInitializer component orchestrates the mounting of key SDK components, including theme and viewport handlers. Components are mounted individually using their mount() methods, with special attention to viewport.mount() which requires timeout protection due to known issues on macOS Telegram.
 
 ```mermaid
 flowchart TD
-A[Telegram Client] --> |theme_params| B(mountMiniAppSync)
-A --> |viewport_data| C(mountViewport)
-B --> D[bindThemeParamsCssVars]
-C --> E[bindViewportCssVars]
-D --> F[CSS Variables: --tg-theme-*]
-E --> G[CSS Variables: --tg-viewport-*]
-F --> H[Component Styles]
-G --> H
-H --> I[Dynamic UI Rendering]
+A[Telegram Client] --> |theme_params| B(mount miniApp)
+A --> |theme_params| C(mount themeParams)
+A --> |viewport_data| D(mount viewport with timeout)
+B --> E[bindThemeParamsCssVars]
+C --> E
+D --> F[bindViewportCssVars]
+E --> G[CSS Variables: --tg-theme-*]
+F --> H[CSS Variables: --tg-viewport-*]
+G --> I[Component Styles]
+H --> I
+I --> J[Dynamic UI Rendering]
+K[Finally Block] --> L[miniApp.ready()]
 ```
 
 **Diagram sources**
-- [init.ts](file://passion/src/core/init.ts#L72-L80)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L34-L154)
 
 **Section sources**
-- [init.ts](file://passion/src/core/init.ts#L68-L82)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L21-L161)
+- [init.ts](file://passion/src/core/init.ts#L72-L143)
 
 ## Core Binding Functions
 The `bindThemeParamsCssVars` and `bindViewportCssVars` functions are responsible for transforming Telegram's theme and viewport data into CSS custom properties accessible in stylesheets.
 
 - `bindThemeParamsCssVars`: Maps theme parameters such as `bg_color`, `text_color`, and `link_color` to CSS variables prefixed with `--tg-theme-*`. These variables enable components to inherit Telegram’s current theme appearance.
-- `bindViewportCssVars`: Translates viewport dimensions and safe area insets into `--tg-viewport-*` and `--tg-sa-*` CSS variables, allowing layout adjustments based on device screen characteristics.
+- `bindViewportCssVars`: Translates viewport dimensions into `--tg-viewport-*` and `--tg-viewport-stable-height` CSS variables, allowing layout adjustments based on device screen characteristics.
+
+**Critical Note**: `bindViewportCssVars()` only creates viewport dimension variables (`--tg-viewport-height`, `--tg-viewport-width`, `--tg-viewport-stable-height`) and does NOT create safe area inset variables (`--tg-sa-*`). Safe area handling must be implemented separately using signals or direct API calls.
 
 These bindings are conditionally applied only when the corresponding SDK components are available, ensuring compatibility across different Telegram clients.
 
 **Section sources**
-- [init.ts](file://passion/src/core/init.ts#L74-L79)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L84-L92)
+- [init.ts](file://passion/src/core/init.ts#L116-L119)
 
 ## Data Flow from SDK to CSS
-The data flow begins with the initialization sequence in `init.ts`, where `mountMiniAppSync` and `mountViewport` establish connections to Telegram's environment. Once mounted, the binding functions subscribe to theme and viewport updates, dynamically updating the document root's CSS variables.
+The data flow begins with the initialization sequence in TMAInitializer, where components are mounted individually using their mount() methods. The new pattern replaces the previous mountMiniAppSync approach with separate mounting for miniApp, themeParams, and viewport.
+
+Key changes in the data flow:
+- **Individual mounting**: Each component (miniApp, themeParams, viewport) is mounted separately using its mount() method
+- **Timeout protection**: viewport.mount() is wrapped in a Promise.race with a 5-second timeout to prevent hanging on macOS Telegram
+- **Guaranteed ready signal**: miniApp.ready() is called in a finally block to ensure the loading screen is removed even if initialization fails
+- **Sequential binding**: CSS variables are bound after successful component mounting
 
 For example:
 - On theme change, `bindThemeParamsCssVars` updates variables like `--tg-theme-bg-color`.
-- On viewport resize or expansion, `bindViewportCssVars` adjusts `--tg-viewport-height` and safe area variables like `--tg-sa-bottom`.
+- On viewport resize or expansion, `bindViewportCssVars` adjusts `--tg-viewport-height` and `--tg-viewport-stable-height`.
 
 This reactive pipeline ensures that UI components automatically reflect changes without requiring manual re-renders or style recalculations.
 
 ```mermaid
 sequenceDiagram
 participant Telegram as Telegram Client
-participant SDK as SDK (mountMiniAppSync/mountViewport)
-participant Binder as bindThemeParamsCssVars/bindViewportCssVars
+participant SDK as SDK (individual mount() calls)
+participant Binder as bind*CssVars functions
 participant DOM as Document Root
 participant CSS as Component CSS
 Telegram->>SDK : theme_changed event
@@ -84,22 +107,24 @@ Binder->>DOM : Set CSS variables (--tg-theme-*)
 DOM->>CSS : Variables available for styling
 Telegram->>SDK : viewport_changed event
 SDK->>Binder : Pass viewport data
-Binder->>DOM : Set CSS variables (--tg-viewport-*, --tg-sa-*)
+Binder->>DOM : Set CSS variables (--tg-viewport-*)
 DOM->>CSS : Variables available for layout
+SDK->>DOM : Call miniApp.ready() in finally block
 ```
 
 **Diagram sources**
-- [init.ts](file://passion/src/core/init.ts#L72-L80)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L34-L154)
 
 **Section sources**
-- [init.ts](file://passion/src/core/init.ts#L72-L80)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L34-L154)
+- [init.ts](file://passion/src/core/init.ts#L104-L143)
 
 ## CSS Variable Usage in Components
 Components leverage the bound CSS variables to maintain visual harmony with the Telegram interface. For instance:
 
 - The `globals.css` file sets the body background using `var(--tg-theme-secondary-bg-color, white)`, falling back to white if the variable is undefined.
-- The `Link.css` component uses `color: var(--tg-theme-link-color)` to ensure links match the native theme’s accent color.
-- Layout containers can use `env()` or `var()` functions with safe area variables (e.g., `padding-bottom: max(env(safe-area-inset-bottom), var(--tg-sa-bottom))`) to avoid content overlap.
+- The `SafeAreaProvider` component uses JavaScript signals to read safe area insets and apply them as inline styles, since bindCssVars() does not create safe area CSS variables.
+- Layout containers can use the safe area values from the viewport component to avoid content overlap.
 
 This approach eliminates hardcoded values and enables truly adaptive styling.
 
@@ -108,45 +133,54 @@ classDiagram
 class globals.css {
 +body : background → --tg-theme-secondary-bg-color
 }
-class Link.css {
-+link : color → --tg-theme-link-color
+class SafeAreaProvider {
++container : padding → signal values
++container : overflow → auto
 }
-class Root.styles.css {
-+root__loading : position → absolute
-+root__loading : top → var(--tg-sa-top)
+class TMAInitializer {
++initialization : order → mount sequence
++viewport : timeout → 5 seconds
++ready : call → finally block
 }
 globals.css --> CSSVariables : uses
-Link.css --> CSSVariables : uses
-Root.styles.css --> CSSVariables : uses
+SafeAreaProvider --> SafeAreaValues : uses
+TMAInitializer --> InitializationFlow : controls
 class CSSVariables {
 --tg-theme-bg-color
 --tg-theme-text-color
 --tg-theme-link-color
---tg-sa-top
---tg-sa-bottom
---tg-viewport-height
+}
+class SafeAreaValues {
+contentSafeAreaInsets()
+safeAreaInsets()
+}
+class InitializationFlow {
+mount()
+bindCssVars()
+ready()
 }
 ```
 
 **Diagram sources**
-- [globals.css](file://passion/src/app/_assets/globals.css#L1-L5)
-- [Link.css](file://passion/src/components/Link/Link.css#L1-L4)
-- [styles.css](file://passion/src/components/Root/styles.css#L1-L10)
+- [globals.css](file://passion/src/app/_assets/globals.css#L1-L11)
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L26-L125)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L21-L161)
 
 **Section sources**
-- [globals.css](file://passion/src/app/_assets/globals.css#L1-L5)
-- [Link.css](file://passion/src/components/Link/Link.css#L1-L4)
-- [styles.css](file://passion/src/components/Root/styles.css#L1-L10)
+- [globals.css](file://passion/src/app/_assets/globals.css#L1-L11)
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L26-L125)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L21-L161)
 
 ## Responsive Design in Telegram Mini Apps
-Responsive design is critical in Telegram Mini Apps due to the wide variety of devices and screen configurations. The viewport integration ensures proper layout by exposing safe area insets and dynamic viewport dimensions via CSS variables.
+Responsive design is critical in Telegram Mini Apps due to the wide variety of devices and screen configurations. The viewport integration ensures proper layout by exposing safe area insets and dynamic viewport dimensions via CSS variables and JavaScript signals.
 
-By using `--tg-sa-*` variables, components can avoid placing interactive elements in non-interactive zones (e.g., under notches or home indicators). Additionally, `--tg-viewport-height` enables full-height layouts that adjust when the keyboard is open or the app is expanded.
+By using the viewport component's signals, components can avoid placing interactive elements in non-interactive zones (e.g., under notches or home indicators). Additionally, `--tg-viewport-height` enables full-height layouts that adjust when the keyboard is open or the app is expanded.
 
-This system supports both portrait and landscape orientations and adapts to platform-specific UI elements, ensuring a consistent and usable experience across iOS, Android, and desktop clients.
+This system supports both portrait and landscape orientations and adapts to platform-specific UI elements, ensuring a consistent and usable experience across iOS, Android, and desktop clients. The new initialization pattern with timeout protection specifically addresses issues on macOS Telegram, where viewport.mount() might otherwise hang indefinitely.
 
 **Section sources**
-- [init.ts](file://passion/src/core/init.ts#L77-L80)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L60-L79)
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L34-L105)
 - [mockEnv.ts](file://passion/src/mockEnv.ts#L25-L45)
 
 ## Common Issues and Debugging Strategies
@@ -156,10 +190,26 @@ Some clients, particularly Telegram for macOS, may fail to respond to `web_app_r
 ### Incorrect Safe Area Calculations
 Clients may report inaccurate safe area values. The `mockEnv.ts` file demonstrates a workaround by returning zero insets (`{ left: 0, top: 0, right: 0, bottom: 0 }`) during development to simulate edge-to-edge layouts.
 
+### Viewport Mount Timeout
+The viewport.mount() call may hang on certain platforms like macOS Telegram. The solution is to use timeout protection with Promise.race:
+
+```typescript
+const viewportMountPromise = viewport.mount();
+const timeoutPromise = new Promise<never>((_, reject) =>
+  setTimeout(() => reject(new Error('Viewport mount timeout')), 5000)
+);
+await Promise.race([viewportMountPromise, timeoutPromise]);
+```
+
+### Missing Safe Area CSS Variables
+A common misconception is that bindCssVars() creates safe area variables. It does not - it only creates viewport dimension variables. Safe area handling must be implemented separately using signals.
+
 ### Debugging Tips
-- Enable debug mode in `init.ts` to log SDK events.
-- Use `themeParams.state` in components (as shown in `theme-params/page.tsx`) to inspect current theme values.
-- Test on real devices when possible, as mocked environments may not reflect actual behavior.
+- Enable debug mode in initialization to log SDK events
+- Use `themeParams.state` in components (as shown in `theme-params/page.tsx`) to inspect current theme values
+- Test on real devices when possible, as mocked environments may not reflect actual behavior
+- Check console logs for timeout warnings from viewport mounting
+- Verify that miniApp.ready() is called even when initialization fails
 
 ```mermaid
 flowchart TD
@@ -169,25 +219,33 @@ B --> |No| D[Check SDK initialization order]
 E[Issue: Incorrect Safe Area] --> F{Using Mock?}
 F --> |Yes| G[Adjust noInsets in mockEnv.ts]
 F --> |No| H[Test on physical device]
-I[Debug Strategy] --> J[Enable setDebug(true)]
-I --> K[Inspect themeParams.state]
-I --> L[Test with real launchParams]
+I[Issue: Viewport Mount Timeout] --> J{Platform is macOS?}
+J --> |Yes| K[Implement 5-second timeout protection]
+J --> |No| L[Check network connectivity]
+M[Debug Strategy] --> N[Enable logging in TMAInitializer]
+M --> O[Inspect themeParams.state]
+M --> P[Test with real launchParams]
+M --> Q[Check for timeout warnings]
 ```
 
 **Diagram sources**
-- [init.ts](file://passion/src/core/init.ts#L39-L64)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L60-L79)
 - [mockEnv.ts](file://passion/src/mockEnv.ts#L25-L45)
 - [page.tsx](file://passion/src/app/theme-params/page.tsx#L10-L11)
 
 **Section sources**
-- [init.ts](file://passion/src/core/init.ts#L39-L64)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L60-L79)
 - [mockEnv.ts](file://passion/src/mockEnv.ts#L25-L45)
 - [page.tsx](file://passion/src/app/theme-params/page.tsx#L10-L11)
 
 ## Best Practices for Theme-Responsive Components
 - Always use `var(--tg-theme-*)` variables for colors to ensure theme consistency.
-- Combine `env(safe-area-inset-*)` with `var(--tg-sa-*)` for maximum compatibility.
+- For safe areas, use JavaScript signals (contentSafeAreaInsets.sub()) rather than expecting CSS variables from bindCssVars().
 - Avoid hardcoding colors or spacings that conflict with Telegram’s theme.
+- Implement timeout protection for asynchronous operations like viewport.mount().
+- Always call miniApp.ready() in a finally block to ensure the loading screen is removed.
+- Use the fallback strategy for safe area insets: try contentSafeAreaInsets() first, then safeAreaInsets(), then fall back to zero.
+- Clean up signal subscriptions in useEffect cleanup functions to prevent memory leaks.
 - Test components in both light and dark modes using mocked themes.
 - Use `useSignal(themeParams.state)` to reactively respond to theme changes in logic.
 - Fall back to sensible defaults (e.g., `white`, `black`) when variables are undefined.
@@ -196,8 +254,8 @@ Following these practices ensures a seamless integration with Telegram’s UI an
 
 **Section sources**
 - [globals.css](file://passion/src/app/_assets/globals.css#L2)
-- [Link.css](file://passion/src/components/Link/Link.css#L2)
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L26-L125)
 - [page.tsx](file://passion/src/app/theme-params/page.tsx#L10)
 
 ## Conclusion
-The theme and viewport integration system in this Telegram Mini App enables dynamic, responsive UIs that adapt to both visual themes and device geometry. By leveraging `bindThemeParamsCssVars` and `bindViewportCssVars`, the application maintains visual consistency with Telegram while ensuring proper layout across diverse devices. Proper initialization, CSS variable usage, and debugging strategies are essential for a robust implementation.
+The theme and viewport integration system in this Telegram Mini App enables dynamic, responsive UIs that adapt to both visual themes and device geometry. By leveraging the updated @tma.js/sdk v3.x initialization pattern with individual mount() calls, timeout protection for viewport.mount(), and guaranteed miniApp.ready() calls, the application maintains visual consistency with Telegram while ensuring reliable initialization across all platforms. The system correctly handles the distinction between viewport dimension variables (created by bindCssVars()) and safe area values (accessed via signals), providing a robust foundation for adaptive UI development. Proper initialization, CSS variable usage, and debugging strategies are essential for a robust implementation.

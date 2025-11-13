@@ -2,14 +2,25 @@
 
 <cite>
 **Referenced Files in This Document**   
-- [layout.tsx](file://passion/src/app/layout.tsx)
+- [layout.tsx](file://passion/src/app/layout.tsx) - *Updated with viewportFit: 'cover' and TMAInitializer integration*
+- [Root.tsx](file://passion/src/components/Root/Root.tsx) - *Updated with SafeAreaProvider and TMAInitializer components*
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx) - *New component for SDK initialization*
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx) - *New component for safe area management*
 - [provider.tsx](file://passion/src/core/i18n/provider.tsx)
 - [globals.css](file://passion/src/app/_assets/globals.css)
-- [Root.tsx](file://passion/src/components/Root/Root.tsx)
 - [config.ts](file://passion/src/core/i18n/config.ts)
 - [locale.ts](file://passion/src/core/i18n/locale.ts)
 - [styles.css](file://passion/src/components/Root/styles.css)
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Added new section on Viewport Configuration and Safe Area Support
+- Added new section on TMAInitializer and SafeAreaProvider Components
+- Updated Root Component and Telegram UI Integration section with new components
+- Added new diagram showing updated component architecture
+- Updated document sources to include new files
+- Added section sources for updated sections
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -22,6 +33,8 @@
 8. [Accessibility and SEO Considerations](#accessibility-and-seo-considerations)
 9. [Performance Implications of CSS Loading](#performance-implications-of-css-loading)
 10. [Customization for Themes and Locales](#customization-for-themes-and-locales)
+11. [Viewport Configuration and Safe Area Support](#viewport-configuration-and-safe-area-support)
+12. [TMAInitializer and SafeAreaProvider Components](#tmainitializer-and-safeareaprovider-components)
 
 ## Introduction
 The layout structure of this Next.js application is designed to support Telegram Mini Apps with internationalization, responsive design, and platform-specific UI adaptations. The core layout file `layout.tsx` serves as the root wrapper for all pages, establishing the foundational UI structure, internationalization context, and global styling. This document details how the layout components work together to create a consistent, accessible, and performant user experience across different locales and Telegram client environments.
@@ -38,11 +51,8 @@ D --> E[Render Root Component]
 E --> F[Render Page Children]
 ```
 
-**Diagram sources**
-- [layout.tsx](file://passion/src/app/layout.tsx#L17-L28)
-
 **Section sources**
-- [layout.tsx](file://passion/src/app/layout.tsx#L17-L28)
+- [layout.tsx](file://passion/src/app/layout.tsx#L26-L38)
 
 ## Internationalization with I18nProvider
 The `I18nProvider` component wraps all page content to enable internationalization throughout the application. It leverages the `next-intl` library to provide translation messages to all child components via React context. The provider fetches localized messages based on the resolved locale and makes them available to all components through the `NextIntlClientProvider`.
@@ -62,10 +72,6 @@ class NextIntlClientProvider {
 }
 I18nProvider --> NextIntlClientProvider : "delegates to"
 ```
-
-**Diagram sources**
-- [provider.tsx](file://passion/src/core/i18n/provider.tsx#L6-L15)
-- [config.ts](file://passion/src/core/i18n/config.ts#L1-L11)
 
 **Section sources**
 - [provider.tsx](file://passion/src/core/i18n/provider.tsx#L6-L15)
@@ -108,10 +114,6 @@ E --> F[TonConnectUIProvider]
 F --> G[AppRoot]
 G --> H[Children]
 ```
-
-**Diagram sources**
-- [Root.tsx](file://passion/src/components/Root/Root.tsx#L44-L57)
-- [Root.tsx](file://passion/src/components/Root/Root.tsx#L19-L42)
 
 **Section sources**
 - [Root.tsx](file://passion/src/components/Root/Root.tsx#L44-L57)
@@ -192,3 +194,53 @@ The modular architecture makes it straightforward to adapt the layout to specifi
 - [config.ts](file://passion/src/core/i18n/config.ts#L1-L11)
 - [locale.ts](file://passion/src/core/i18n/locale.ts#L17-L19)
 - [Root.tsx](file://passion/src/components/Root/Root.tsx#L34-L37)
+
+## Viewport Configuration and Safe Area Support
+The application now includes critical viewport configuration to support safe area handling in Telegram Mini Apps. The `viewport` export in `layout.tsx` has been updated with the `viewportFit: 'cover'` property, which allows the application to extend into unsafe areas around device notches and status bars.
+
+This configuration is essential for fullscreen mode on iOS devices, where the WebView expands to cover the entire screen. The `viewportFit: 'cover'` directive enables the application to occupy the full screen area, including regions around device notches, while the application itself controls the safe area insets through manual padding adjustments.
+
+The complete viewport configuration includes:
+- `width: 'device-width'` - Match device screen width
+- `initialScale: 1` - No initial zoom
+- `maximumScale: 1` - Prevent user zoom
+- `userScalable: false` - Disable pinch-to-zoom
+- `viewportFit: 'cover'` - **Critical**: Extend into unsafe areas
+
+This configuration works in conjunction with the `SafeAreaProvider` component to ensure content remains within visible boundaries and does not render underneath status bars or system UI elements.
+
+**Section sources**
+- [layout.tsx](file://passion/src/app/layout.tsx#L18-L24)
+
+## TMAInitializer and SafeAreaProvider Components
+The Root component has been enhanced with two new client-side components: `TMAInitializer` and `SafeAreaProvider`. These components work together to initialize the Telegram Mini App SDK and manage safe area insets for proper content positioning.
+
+The `TMAInitializer` component handles the initialization of the @tma.js/sdk, including:
+- Mounting the miniApp, themeParams, and viewport modules
+- Binding CSS variables for viewport dimensions and theme parameters
+- Requesting expanded viewport and fullscreen mode
+- Signaling application readiness to Telegram
+
+The `SafeAreaProvider` component applies safe area insets as padding to ensure content remains within visible boundaries. It uses JavaScript signals from @tma.js/sdk-react to subscribe to changes in `viewport.contentSafeAreaInsets` and updates React state accordingly. This approach is preferred over relying on CSS environment variables, which do not work reliably within Telegram's WebView.
+
+```mermaid
+graph LR
+A[RootLayout] --> B[TMAInitializer]
+A --> C[SafeAreaProvider]
+C --> D[Page Components]
+B --> |Initializes SDK| E[@tma.js/sdk]
+B --> |Binds CSS Vars| E
+B --> |Requests Fullscreen| E
+C --> |Applies Padding| F[CSS Variables]
+E --> |Updates| F
+```
+
+**Diagram sources**
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx) - *New component for SDK initialization*
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx) - *New component for safe area management*
+- [Root.tsx](file://passion/src/components/Root/Root.tsx#L42-L44) - *Integration of new components*
+
+**Section sources**
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx)
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx)
+- [Root.tsx](file://passion/src/components/Root/Root.tsx#L42-L44)

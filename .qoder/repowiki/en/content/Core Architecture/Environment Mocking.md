@@ -2,11 +2,19 @@
 
 <cite>
 **Referenced Files in This Document**   
-- [mockEnv.ts](file://passion/src/mockEnv.ts)
-- [init.ts](file://passion/src/core/init.ts)
-- [instrumentation-client.ts](file://passion/src/instrumentation-client.ts)
-- [README.md](file://passion/README.md)
+- [mockEnv.ts](file://passion/src/mockEnv.ts) - *Updated to use internal mockTelegramEnv handling*
+- [init.ts](file://passion/src/core/init.ts) - *Simplified macOS-specific mocking logic*
+- [instrumentation-client.ts](file://passion/src/instrumentation-client.ts) - *Integration point for mocking system*
+- [README.md](file://passion/README.md) - *General setup and usage guidance*
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Updated documentation to reflect removal of deprecated event handling in `mockEnv.ts`
+- Removed outdated descriptions of manual `web_app_request_theme` and `web_app_request_safe_area` interception
+- Simplified architecture overview and component analysis to align with updated implementation
+- Removed obsolete sequence and flow diagrams related to deprecated event handling
+- Updated section sources to reflect current file structure and changes
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -21,16 +29,18 @@
 
 The environment mocking system is a critical development tool designed to simulate Telegram's WebApp environment when building applications outside the native Telegram client. This system is particularly important for macOS users, as the Telegram desktop client for macOS has known bugs that affect theme and safe area requests. The mocking system enables developers to reliably test and develop their Telegram Mini Apps in standard browser environments during the development phase, while ensuring these mocks are automatically excluded from production builds through tree-shaking.
 
+With the recent update, the `mockEnv.ts` file has been simplified by removing deprecated manual handling of `web_app_request_theme` and `web_app_request_safe_area` events. These are now handled internally by `mockTelegramEnv` from `@tma.js/sdk-react`, reducing code complexity and improving maintainability.
+
 **Section sources**
 - [README.md](file://passion/README.md#L53-L86)
 
 ## Core Components
 
-The environment mocking system consists of two primary components: the global development mock in `mockEnv.ts` and the macOS-specific mock in `init.ts`. The `mockEnv.ts` file provides a general environment simulation for non-Telegram environments during development, while `init.ts` contains targeted fixes for known issues in the Telegram macOS client. These components work together to ensure consistent behavior across development, testing, and production environments.
+The environment mocking system consists of two primary components: the global development mock in `mockEnv.ts` and the macOS-specific mock in `init.ts`. The `mockEnv.ts` file provides a general environment simulation for non-Telegram environments during development, leveraging the `mockTelegramEnv` function from `@tma.js/sdk-react` to handle all necessary event mocking internally. The `init.ts` file contains targeted activation of mocking for known issues in the Telegram macOS client. These components work together to ensure consistent behavior across development, testing, and production environments.
 
 **Section sources**
-- [mockEnv.ts](file://passion/src/mockEnv.ts#L1-L82)
-- [init.ts](file://passion/src/core/init.ts#L1-L83)
+- [mockEnv.ts](file://passion/src/mockEnv.ts#L1-L62)
+- [init.ts](file://passion/src/core/init.ts#L1-L155)
 
 ## Architecture Overview
 
@@ -43,10 +53,10 @@ C --> E{"Is Development Mode?"}
 E --> |Yes| F["mockTelegramEnv()"]
 E --> |No| G["Skip Mocking"]
 D --> H{"Platform is macOS?"}
-H --> |Yes| I["mockTelegramEnv() with macOS fixes"]
+H --> |Yes| I["Enable macOS mock"]
 H --> |No| J["Normal Initialization"]
 F --> K["Simulate Telegram WebApp"]
-I --> L["Fix theme/safe area bugs"]
+I --> L["Apply SDK-level fixes"]
 K --> M["Application Components"]
 L --> M
 ```
@@ -54,7 +64,7 @@ L --> M
 **Diagram sources**
 - [instrumentation-client.ts](file://passion/src/instrumentation-client.ts#L8-L25)
 - [init.ts](file://passion/src/core/init.ts#L20-L83)
-- [mockEnv.ts](file://passion/src/mockEnv.ts#L5-L82)
+- [mockEnv.ts](file://passion/src/mockEnv.ts#L5-L62)
 
 ## Detailed Component Analysis
 
@@ -62,58 +72,48 @@ L --> M
 
 The `mockEnv.ts` file implements a development-only environment mock that simulates the Telegram WebApp environment when the application is not running within an actual Telegram client. This mock is conditionally applied only in development mode, ensuring it is automatically removed from production builds through tree-shaking.
 
-The mock intercepts critical Telegram WebApp methods and provides simulated responses. When a `web_app_request_theme` event is received, it emits a `theme_changed` event with predefined theme parameters that match Telegram's dark theme. Similarly, viewport and safe area requests are handled by returning appropriate simulated values based on the current window dimensions or zero insets.
+The mock now relies entirely on `mockTelegramEnv` from `@tma.js/sdk-react` to handle all event simulations internally. It no longer manually intercepts `web_app_request_theme` or `web_app_request_safe_area` events, as these are now managed by the SDK. Instead, it configures the mock environment with predefined launch parameters, including theme configuration and platform information.
 
-```mermaid
-sequenceDiagram
-participant Browser
-participant mockEnv
-participant App
-Browser->>mockEnv : web_app_request_theme
-mockEnv->>mockEnv : Check environment
-mockEnv->>App : theme_changed event
-mockEnv->>App : Provide theme parameters
-Browser->>mockEnv : web_app_request_viewport
-mockEnv->>mockEnv : Calculate dimensions
-mockEnv->>App : viewport_changed event
-mockEnv->>App : Provide window dimensions
-Browser->>mockEnv : web_app_request_safe_area
-mockEnv->>mockEnv : Return zero insets
-mockEnv->>App : safe_area_changed event
+The `themeParams` object defines a comprehensive set of color values matching Telegram's dark theme, ensuring visual consistency during development. The `noInsets` constant is passed to the SDK's internal mock system to ensure safe area requests return zero values when appropriate.
+
+```typescript
+const themeParams = {
+  accent_text_color: '#6ab2f2',
+  bg_color: '#17212b',
+  button_color: '#5288c1',
+  button_text_color: '#ffffff',
+  destructive_text_color: '#ec3942',
+  header_bg_color: '#17212b',
+  hint_color: '#708499',
+  link_color: '#6ab3f3',
+  secondary_bg_color: '#232e3c',
+  section_bg_color: '#17212b',
+  section_header_text_color: '#6ab3f3',
+  subtitle_text_color: '#708499',
+  text_color: '#f5f5f5',
+} as const;
+const noInsets = { left: 0, top: 0, bottom: 0, right: 0 } as const;
 ```
 
-**Diagram sources**
-- [mockEnv.ts](file://passion/src/mockEnv.ts#L27-L46)
-
 **Section sources**
-- [mockEnv.ts](file://passion/src/mockEnv.ts#L1-L82)
+- [mockEnv.ts](file://passion/src/mockEnv.ts#L1-L62)
 
 ### macOS-Specific Mock Analysis
 
 The macOS-specific mock implemented in `init.ts` addresses known bugs in the Telegram desktop client for macOS. These bugs include failure to respond to `web_app_request_theme` method calls and generating incorrect events for `web_app_request_safe_area`.
 
-The mock uses a `firstThemeSent` flag to manage theme initialization state. On the first request for theme information, it retrieves theme parameters from launch parameters. On subsequent requests, it returns the current theme state from the application's theme state management system. This ensures consistent theme behavior even when the native client fails to respond appropriately.
+The implementation has been simplified to directly call `mockTelegramEnv()` when the platform is detected as `macos`. This leverages the internal event handling of the SDK rather than implementing custom interception logic. The `mockForMacOS` option is passed from `instrumentation-client.ts` based on the `tgWebAppPlatform` launch parameter.
 
-For safe area requests, the mock intercepts `web_app_request_safe_area` calls and returns zero insets, overriding the incorrect values that might be generated by the buggy macOS client.
+This approach eliminates the need for maintaining a `firstThemeSent` flag or manually managing theme state, as these concerns are now handled by the SDK's internal implementation. The mock ensures consistent behavior across platforms by providing a reliable fallback when the native client fails to respond appropriately.
 
-```mermaid
-flowchart TD
-Start([web_app_request_theme]) --> CheckFirst["firstThemeSent?"]
-CheckFirst --> |No| GetFromLaunch["Retrieve from launchParams"]
-CheckFirst --> |Yes| GetFromState["Retrieve from themeParamsState"]
-GetFromLaunch --> SetFlag["Set firstThemeSent = true"]
-SetFlag --> EmitTheme["Emit theme_changed event"]
-GetFromState --> EmitTheme
-EmitTheme --> End([Return theme])
-SafeAreaStart([web_app_request_safe_area]) --> ReturnZero["Return zero insets"]
-ReturnZero --> EndSafeArea([Emit safe_area_changed])
+```typescript
+if (options.mockForMacOS) {
+  mockTelegramEnv();
+}
 ```
 
-**Diagram sources**
-- [init.ts](file://passion/src/core/init.ts#L39-L63)
-
 **Section sources**
-- [init.ts](file://passion/src/core/init.ts#L36-L66)
+- [init.ts](file://passion/src/core/init.ts#L47-L49)
 
 ## Development Workflow and Integration
 
@@ -153,15 +153,17 @@ A frequent issue occurs when the mock is accidentally enabled in production envi
 
 Another potential issue is the mock not activating when expected. This can occur if the environment detection logic fails or if there are timing issues in the initialization sequence. Developers should check the console output for the warning message emitted by `mockEnv.ts` to confirm that the mock is being applied correctly.
 
+With the simplification of the mocking system, developers should no longer attempt to manually handle `web_app_request_theme` or `web_app_request_safe_area` events, as these are now managed internally by `@tma.js/sdk-react`.
+
 **Section sources**
-- [mockEnv.ts](file://passion/src/mockEnv.ts#L76-L78)
+- [mockEnv.ts](file://passion/src/mockEnv.ts#L56-L58)
 - [README.md](file://passion/README.md#L80-L86)
 
 ## Conclusion
 
-The environment mocking system provides essential functionality for developing Telegram Mini Apps, particularly addressing the specific challenges of the macOS platform. By simulating the Telegram WebApp environment during development and providing targeted fixes for known client bugs, this system enables reliable cross-platform development and testing. The architecture ensures that mocks are only active in appropriate contexts, preventing accidental use in production while providing robust development capabilities.
+The environment mocking system provides essential functionality for developing Telegram Mini Apps, particularly addressing the specific challenges of the macOS platform. By simulating the Telegram WebApp environment during development and leveraging the internal capabilities of `@tma.js/sdk-react` for event handling, this system enables reliable cross-platform development and testing. The recent simplification of `mockEnv.ts` reduces code complexity and maintenance overhead while maintaining the same level of functionality.
 
-The integration of multiple mock layers—general development mock and platform-specific fixes—demonstrates a thoughtful approach to environment simulation that balances flexibility with reliability. This system significantly improves developer experience by reducing platform-specific issues during the development process.
+The architecture ensures that mocks are only active in appropriate contexts, preventing accidental use in production while providing robust development capabilities. The integration of SDK-level mocking demonstrates a move toward more maintainable and standardized solutions for common development challenges in the Telegram Mini Apps ecosystem.
 
 **Section sources**
 - [mockEnv.ts](file://passion/src/mockEnv.ts#L3-L8)
