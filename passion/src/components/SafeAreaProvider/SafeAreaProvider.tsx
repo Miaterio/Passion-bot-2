@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactNode, useEffect, useState } from 'react';
-import { viewport } from '@tma.js/sdk-react';
+import { viewport, useSignal } from '@tma.js/sdk-react';
 
 interface SafeAreaInsets {
   top: number;
@@ -24,100 +24,88 @@ interface SafeAreaProviderProps {
  * This component manually handles safe area insets via signal subscriptions.
  */
 export function SafeAreaProvider({ children }: SafeAreaProviderProps) {
-  const [insets, setInsets] = useState<SafeAreaInsets>({
+  // CRITICAL: Use contentSafeAreaInsets (Bot API 8.0+) for fullscreen mode
+  // This accounts for Telegram UI elements like close button, header, etc.
+  const contentInsets = useSignal(viewport.contentSafeAreaInsets);
+  
+  // Fallback for older Telegram versions
+  const fallbackInsets = useSignal(viewport.safeAreaInsets);
+  
+  // Prefer contentSafeAreaInsets over safeAreaInsets
+  const insets: SafeAreaInsets = contentInsets || fallbackInsets || {
     top: 0,
     bottom: 0,
     left: 0,
     right: 0,
-  });
+  };
 
+  // Debug logging
   useEffect(() => {
-    // Check if viewport is mounted
-    if (!viewport.isMounted()) {
-      console.warn('[SafeAreaProvider] Viewport not mounted');
-      return;
-    }
-
-    /**
-     * Get safe area insets with fallback strategy
-     * 1. Try contentSafeAreaInsets (Bot API 8.0+)
-     * 2. Fallback to safeAreaInsets (older versions)
-     * 3. Ultimate fallback to zero insets
-     */
-    const getSafeAreaInsets = (): SafeAreaInsets => {
-      try {
-        // Try Bot API 8.0+ method first
-        const contentInsets = viewport.contentSafeAreaInsets();
-        if (contentInsets) {
-          return contentInsets as SafeAreaInsets;
-        }
-      } catch (error) {
-        console.warn('[SafeAreaProvider] contentSafeAreaInsets unavailable:', error);
-      }
-
-      try {
-        // Fallback to older API
-        const safeInsets = viewport.safeAreaInsets();
-        if (safeInsets) {
-          return safeInsets as SafeAreaInsets;
-        }
-      } catch (error) {
-        console.warn('[SafeAreaProvider] safeAreaInsets unavailable:', error);
-      }
-
-      // Ultimate fallback
-      return { top: 0, bottom: 0, left: 0, right: 0 };
-    };
-
-    // Set initial insets
-    const initialInsets = getSafeAreaInsets();
-    setInsets(initialInsets);
-
-    // Subscribe to changes using .sub() method (NOT .subscribe())
-    // The subscription automatically handles orientation changes and fullscreen transitions
-    let unsubscribe: (() => void) | undefined;
-
-    try {
-      if (viewport.contentSafeAreaInsets && typeof viewport.contentSafeAreaInsets.sub === 'function') {
-        unsubscribe = viewport.contentSafeAreaInsets.sub((newInsets) => {
-          if (newInsets) {
-            setInsets(newInsets as SafeAreaInsets);
-          }
-        });
-      } else if (viewport.safeAreaInsets && typeof viewport.safeAreaInsets.sub === 'function') {
-        // Fallback to safeAreaInsets subscription
-        unsubscribe = viewport.safeAreaInsets.sub((newInsets) => {
-          if (newInsets) {
-            setInsets(newInsets as SafeAreaInsets);
-          }
-        });
-      }
-    } catch (error) {
-      console.error('[SafeAreaProvider] Failed to subscribe to insets:', error);
-    }
-
-    // Cleanup function - CRITICAL for preventing memory leaks
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
-  }, []);
+    console.log('[SafeAreaProvider] contentSafeAreaInsets:', contentInsets);
+    console.log('[SafeAreaProvider] safeAreaInsets (fallback):', fallbackInsets);
+    console.log('[SafeAreaProvider] Using insets:', insets);
+    console.log('[SafeAreaProvider] Calculated height:', `calc(100% - ${insets.top + insets.bottom}px)`);
+  }, [contentInsets, fallbackInsets, insets]);
 
   return (
     <div
       className="safe-area-container"
       style={{
-        paddingTop: `${insets.top}px`,
-        paddingBottom: `${insets.bottom}px`,
-        paddingLeft: `${insets.left}px`,
-        paddingRight: `${insets.right}px`,
-        height: '100%',
-        boxSizing: 'border-box',
-        overflowY: 'auto',
-        overflowX: 'hidden',
+        // Use absolute positioning to control exact boundaries
+        position: 'absolute',
+        top: `${insets.top}px`,
+        bottom: `${insets.bottom}px`,
+        left: `${insets.left}px`,
+        right: `${insets.right}px`,
       }}
     >
+      {/* Debug overlay - remove in production */}
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          background: contentInsets ? 'rgba(0, 128, 255, 0.9)' : 'rgba(255, 0, 0, 0.9)',
+          color: 'white',
+          padding: '4px 8px',
+          fontSize: '10px',
+          zIndex: 9999,
+          pointerEvents: 'none',
+        }}
+      >
+        {contentInsets ? 'Content' : 'Safe'} Area: T:{insets.top} B:{insets.bottom} L:{insets.left} R:{insets.right}
+      </div>
+      {/* Visual safe area indicators */}
+      {insets.top > 0 && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: `${insets.top}px`,
+            background: 'rgba(0, 255, 0, 0.2)',
+            borderBottom: '2px solid lime',
+            zIndex: 9998,
+            pointerEvents: 'none',
+          }}
+        />
+      )}
+      {insets.bottom > 0 && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: `${insets.bottom}px`,
+            background: 'rgba(0, 255, 0, 0.2)',
+            borderTop: '2px solid lime',
+            zIndex: 9998,
+            pointerEvents: 'none',
+          }}
+        />
+      )}
       {children}
     </div>
   );
