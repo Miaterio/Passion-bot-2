@@ -23,7 +23,7 @@ body {
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
-  background: var(--tg-theme-bg-color, #fff);
+  background: var(--tg-theme-bg-color, #ffffff);
 }
 
 /* Ensure Next.js root div takes full height */
@@ -40,6 +40,7 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  background: var(--tg-theme-bg-color, #ffffff);
 }
 
 /* Loading indicator */

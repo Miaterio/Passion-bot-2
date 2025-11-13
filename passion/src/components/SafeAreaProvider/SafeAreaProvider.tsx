@@ -31,21 +31,49 @@ export function SafeAreaProvider({ children }: SafeAreaProviderProps) {
   // Fallback for older Telegram versions
   const fallbackInsets = useSignal(viewport.safeAreaInsets);
   
+  // Additional viewport state for diagnostics
+  const isExpanded = useSignal(viewport.isExpanded);
+  
   // Prefer contentSafeAreaInsets over safeAreaInsets
-  const insets: SafeAreaInsets = contentInsets || fallbackInsets || {
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
+  // BUT: Use max values as fallback since contentSafeAreaInsets.bottom can be 0 on some Telegram versions
+  const insets: SafeAreaInsets = {
+    top: Math.max(
+      contentInsets?.top ?? 0,
+      fallbackInsets?.top ?? 0
+    ),
+    bottom: Math.max(
+      contentInsets?.bottom ?? 0,
+      fallbackInsets?.bottom ?? 0
+    ),
+    left: Math.max(
+      contentInsets?.left ?? 0,
+      fallbackInsets?.left ?? 0
+    ),
+    right: Math.max(
+      contentInsets?.right ?? 0,
+      fallbackInsets?.right ?? 0
+    ),
   };
 
   // Debug logging
   useEffect(() => {
-    console.log('[SafeAreaProvider] contentSafeAreaInsets:', contentInsets);
-    console.log('[SafeAreaProvider] safeAreaInsets (fallback):', fallbackInsets);
-    console.log('[SafeAreaProvider] Using insets:', insets);
-    console.log('[SafeAreaProvider] Calculated height:', `calc(100% - ${insets.top + insets.bottom}px)`);
-  }, [contentInsets, fallbackInsets, insets]);
+    console.log('[SafeAreaProvider] Full diagnostic:', {
+      contentInsets,
+      fallbackInsets,
+      isExpanded,
+      usingContentInsets: !!contentInsets,
+      insetsAreSame: contentInsets && fallbackInsets && 
+        contentInsets.top === fallbackInsets.top && 
+        contentInsets.bottom === fallbackInsets.bottom,
+    });
+  }, [contentInsets, fallbackInsets, isExpanded, insets]);
+
+  // Calculate additional padding for Telegram UI elements
+  // WORKAROUND: contentSafeAreaInsets doesn't correctly account for Telegram's close button on iOS
+  // GitHub issue: https://github.com/TelegramMessenger/Telegram-iOS/issues/1377
+  // In fullscreen mode, Telegram adds a ~44-60px close button at the top, but contentSafeAreaInsets.bottom is often 0
+  const telegramUITopPadding = contentInsets && contentInsets.bottom === 0 ? 20 : 0;
+  const telegramUIBottomPadding = 8; // Small padding for better spacing
 
   return (
     <div
@@ -57,55 +85,11 @@ export function SafeAreaProvider({ children }: SafeAreaProviderProps) {
         bottom: `${insets.bottom}px`,
         left: `${insets.left}px`,
         right: `${insets.right}px`,
+        // Add padding inside the container as workaround for incorrect contentSafeAreaInsets on iOS
+        paddingTop: `${telegramUITopPadding}px`,
+        paddingBottom: `${telegramUIBottomPadding}px`,
       }}
     >
-      {/* Debug overlay - remove in production */}
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          background: contentInsets ? 'rgba(0, 128, 255, 0.9)' : 'rgba(255, 0, 0, 0.9)',
-          color: 'white',
-          padding: '4px 8px',
-          fontSize: '10px',
-          zIndex: 9999,
-          pointerEvents: 'none',
-        }}
-      >
-        {contentInsets ? 'Content' : 'Safe'} Area: T:{insets.top} B:{insets.bottom} L:{insets.left} R:{insets.right}
-      </div>
-      {/* Visual safe area indicators */}
-      {insets.top > 0 && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: `${insets.top}px`,
-            background: 'rgba(0, 255, 0, 0.2)',
-            borderBottom: '2px solid lime',
-            zIndex: 9998,
-            pointerEvents: 'none',
-          }}
-        />
-      )}
-      {insets.bottom > 0 && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: `${insets.bottom}px`,
-            background: 'rgba(0, 255, 0, 0.2)',
-            borderTop: '2px solid lime',
-            zIndex: 9998,
-            pointerEvents: 'none',
-          }}
-        />
-      )}
       {children}
     </div>
   );

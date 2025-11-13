@@ -118,20 +118,36 @@ export function TMAInitializer() {
             if (viewport.expand && typeof viewport.expand === 'function') {
               viewport.expand();
               console.log('[TMAInitializer] viewport expanded');
+              console.log('[TMAInitializer] isExpanded:', viewport.isExpanded());
             }
           } catch (error) {
             console.warn('[TMAInitializer] viewport.expand failed:', error);
           }
 
-          // 8. Optionally request fullscreen (uncomment if needed)
+          // Wait a bit for expand to complete
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+          // 8. Request fullscreen mode
           try {
             if (viewport.requestFullscreen && typeof viewport.requestFullscreen === 'function') {
               await viewport.requestFullscreen();
               console.log('[TMAInitializer] fullscreen requested');
+              console.log('[TMAInitializer] isFullscreen:', viewport.isFullscreen?.());
             }
           } catch (error) {
             console.warn('[TMAInitializer] fullscreen request failed:', error);
           }
+
+          // Wait a bit for fullscreen to settle
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+          // Log final viewport state
+          console.log('[TMAInitializer] Final viewport state:', {
+            isExpanded: viewport.isExpanded?.(),
+            isFullscreen: viewport.isFullscreen?.(),
+            contentSafeAreaInsets: viewport.contentSafeAreaInsets?.(),
+            safeAreaInsets: viewport.safeAreaInsets?.(),
+          });
         }
 
         setInitialized(true);
