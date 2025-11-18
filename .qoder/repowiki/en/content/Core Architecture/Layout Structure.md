@@ -5,7 +5,7 @@
 - [layout.tsx](file://passion/src/app/layout.tsx) - *Updated with viewportFit: 'cover' and TMAInitializer integration*
 - [Root.tsx](file://passion/src/components/Root/Root.tsx) - *Updated with SafeAreaProvider and TMAInitializer components*
 - [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx) - *New component for SDK initialization*
-- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx) - *New component for safe area management*
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx) - *Updated with signal-based reactive state management*
 - [provider.tsx](file://passion/src/core/i18n/provider.tsx)
 - [globals.css](file://passion/src/app/_assets/globals.css)
 - [config.ts](file://passion/src/core/i18n/config.ts)
@@ -15,12 +15,13 @@
 
 ## Update Summary
 **Changes Made**   
-- Added new section on Viewport Configuration and Safe Area Support
-- Added new section on TMAInitializer and SafeAreaProvider Components
-- Updated Root Component and Telegram UI Integration section with new components
-- Added new diagram showing updated component architecture
-- Updated document sources to include new files
-- Added section sources for updated sections
+- Updated **TMAInitializer and SafeAreaProvider Components** section to reflect migration from useState to useSignal
+- Added detailed explanation of signal-based reactive state management using @tma.js/sdk-react
+- Enhanced safe area calculation logic with Math.max fallback between contentSafeAreaInsets and safeAreaInsets
+- Updated component rendering strategy from padding-based to absolute positioning
+- Added diagnostic logging details for viewport state including isExpanded, isFullscreen, and both inset types
+- Updated diagram to reflect new signal usage pattern
+- Revised section sources to reflect updated implementation in SafeAreaProvider.tsx
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -221,7 +222,27 @@ The `TMAInitializer` component handles the initialization of the @tma.js/sdk, in
 - Requesting expanded viewport and fullscreen mode
 - Signaling application readiness to Telegram
 
-The `SafeAreaProvider` component applies safe area insets as padding to ensure content remains within visible boundaries. It uses JavaScript signals from @tma.js/sdk-react to subscribe to changes in `viewport.contentSafeAreaInsets` and updates React state accordingly. This approach is preferred over relying on CSS environment variables, which do not work reliably within Telegram's WebView.
+The `SafeAreaProvider` component has been significantly updated to use signals from @tma.js/sdk-react for reactive state management. Key changes include:
+
+**Signal-Based Reactive State Management**
+- Replaced `useState` with `useSignal` for direct signal consumption
+- Transitioned from subscription model to automatic signal updates
+- Directly consumes `viewport.contentSafeAreaInsets` and `viewport.safeAreaInsets` signals
+
+**Enhanced Safe Area Calculation**
+- Implements `Math.max` fallback between `contentSafeAreaInsets` and `safeAreaInsets`
+- Ensures reliability when `contentSafeAreaInsets.bottom` is 0 on certain Telegram versions
+- Uses both inset types to provide maximum compatibility across Telegram versions
+
+**Positioning Strategy Update**
+- Changed from padding-based layout to absolute positioning
+- Uses `top`, `bottom`, `left`, `right` CSS properties for precise boundary control
+- Maintains a small bottom padding (8px) for improved spacing
+
+**Diagnostic Logging**
+- Added comprehensive logging of viewport state
+- Logs include: `contentInsets`, `fallbackInsets`, `isExpanded`, `isFullscreen`
+- Includes diagnostic flags: `usingContentInsets`, `insetsAreSame`
 
 ```mermaid
 graph LR
@@ -231,16 +252,18 @@ C --> D[Page Components]
 B --> |Initializes SDK| E[@tma.js/sdk]
 B --> |Binds CSS Vars| E
 B --> |Requests Fullscreen| E
-C --> |Applies Padding| F[CSS Variables]
-E --> |Updates| F
+C --> |Uses Signals| F[contentSafeAreaInsets]
+C --> |Uses Signals| G[safeAreaInsets]
+F --> |Reactive Updates| C
+G --> |Reactive Updates| C
 ```
 
 **Diagram sources**
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L25-L90) - *Updated with signal-based reactive state management*
 - [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx) - *New component for SDK initialization*
-- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx) - *New component for safe area management*
-- [Root.tsx](file://passion/src/components/Root/Root.tsx#L42-L44) - *Integration of new components*
+- [Root.tsx](file://passion/src/components/Root/Root.tsx#L42-L44) - *Integration of updated components*
 
 **Section sources**
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L25-L90) - *Updated with signal-based reactive state management*
 - [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx)
-- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx)
 - [Root.tsx](file://passion/src/components/Root/Root.tsx#L42-L44)

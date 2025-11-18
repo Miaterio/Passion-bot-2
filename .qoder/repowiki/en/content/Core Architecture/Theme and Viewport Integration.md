@@ -5,20 +5,18 @@
 - [init.ts](file://passion/src/core/init.ts) - *Updated for @tma.js/sdk v3.x migration*
 - [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx) - *New initialization component with timeout protection*
 - [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx) - *Manual safe area handling via signals*
-- [globals.css](file://passion/src/app/_assets/globals.css) - *Global styles with safe area container*
+- [globals.css](file://passion/src/app/_assets/globals.css) - *Enhanced with comprehensive safe area support and Telegram UI component styles*
 - [mockEnv.ts](file://passion/src/mockEnv.ts) - *Environment mocking for development*
 - [page.tsx](file://passion/src/app/theme-params/page.tsx) - *Theme parameters inspection*
 </cite>
 
 ## Update Summary
 **Changes Made**   
-- Updated initialization pattern to reflect migration from @telegram-apps/sdk-react to @tma.js/sdk v3.x
-- Added new TMAInitializer component as primary initialization point
-- Revised data flow to use individual mount() calls instead of mountMiniAppSync
-- Added timeout protection for viewport.mount() to prevent hanging on macOS
-- Ensured miniApp.ready() is called in finally block for guaranteed initialization signaling
-- Clarified that bindCssVars() only creates viewport dimension variables, not safe area variables
+- Updated documentation to reflect enhanced safe area implementation in globals.css using CSS variables (--sat, --sar, --sab, --sal) mapped to env(safe-area-inset-*)
+- Added documentation for new CSS-based margin-top of 12px on first child of .safe-area-container to fix iOS close button overlap
+- Documented critical styles for Telegram UI components (.tgui, .tgui-app-root, .tgui-list) ensuring proper layout
 - Updated section sources to reflect actual file locations and changes
+- Enhanced source tracking system with updated file references and annotations
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -120,18 +118,40 @@ SDK->>DOM : Call miniApp.ready() in finally block
 - [init.ts](file://passion/src/core/init.ts#L104-L143)
 
 ## CSS Variable Usage in Components
-Components leverage the bound CSS variables to maintain visual harmony with the Telegram interface. For instance:
+Components leverage the bound CSS variables to maintain visual harmony with the Telegram interface. The enhanced `globals.css` now includes comprehensive safe area support using CSS variables mapped to environment variables:
 
-- The `globals.css` file sets the body background using `var(--tg-theme-secondary-bg-color, white)`, falling back to white if the variable is undefined.
-- The `SafeAreaProvider` component uses JavaScript signals to read safe area insets and apply them as inline styles, since bindCssVars() does not create safe area CSS variables.
-- Layout containers can use the safe area values from the viewport component to avoid content overlap.
+```css
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+}
+```
 
-This approach eliminates hardcoded values and enables truly adaptive styling.
+The `.safe-area-container` class receives padding from the SafeAreaProvider component, with a critical CSS-based margin-top of 12px applied to the first child to prevent overlap with the iOS close button:
+
+```css
+.safe-area-container > :first-child {
+  margin-top: 12px;
+}
+```
+
+Additional critical styles ensure proper layout for Telegram UI components:
+- `.tgui` ensures full height
+- `.tgui-app-root` prevents layout interference with height: 100% and overflow: hidden
+- `.tgui-list` allows scrolling with flex: 1 and overflow: visible
+- `.tgui-section` and `.tgui-cell` prevent shrinking with flex-shrink: 0
+
+This approach eliminates hardcoded values and enables truly adaptive styling while addressing iOS-specific issues with the close button overlap.
 
 ```mermaid
 classDiagram
 class globals.css {
 +body : background → --tg-theme-secondary-bg-color
++.safe-area-container : margin-top → 12px (first child)
++.tgui-app-root : overflow → hidden
++.tgui-list : overflow → visible
 }
 class SafeAreaProvider {
 +container : padding → signal values
@@ -149,6 +169,10 @@ class CSSVariables {
 --tg-theme-bg-color
 --tg-theme-text-color
 --tg-theme-link-color
+--sat
+--sar
+--sab
+--sal
 }
 class SafeAreaValues {
 contentSafeAreaInsets()
@@ -162,17 +186,19 @@ ready()
 ```
 
 **Diagram sources**
-- [globals.css](file://passion/src/app/_assets/globals.css#L1-L11)
+- [globals.css](file://passion/src/app/_assets/globals.css#L1-L86)
 - [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L26-L125)
 - [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L21-L161)
 
 **Section sources**
-- [globals.css](file://passion/src/app/_assets/globals.css#L1-L11)
+- [globals.css](file://passion/src/app/_assets/globals.css#L1-L86)
 - [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L26-L125)
 - [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L21-L161)
 
 ## Responsive Design in Telegram Mini Apps
 Responsive design is critical in Telegram Mini Apps due to the wide variety of devices and screen configurations. The viewport integration ensures proper layout by exposing safe area insets and dynamic viewport dimensions via CSS variables and JavaScript signals.
+
+The enhanced `globals.css` provides comprehensive safe area support through CSS variables (`--sat`, `--sar`, `--sab`, `--sal`) mapped to `env(safe-area-inset-*)`, ensuring consistent behavior across different devices. The implementation of a 12px margin-top on the first child of `.safe-area-container` specifically addresses iOS close button overlap issues, replacing the unreliable JavaScript-based padding approach.
 
 By using the viewport component's signals, components can avoid placing interactive elements in non-interactive zones (e.g., under notches or home indicators). Additionally, `--tg-viewport-height` enables full-height layouts that adjust when the keyboard is open or the app is expanded.
 
@@ -182,13 +208,14 @@ This system supports both portrait and landscape orientations and adapts to plat
 - [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L60-L79)
 - [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L34-L105)
 - [mockEnv.ts](file://passion/src/mockEnv.ts#L25-L45)
+- [globals.css](file://passion/src/app/_assets/globals.css#L46-L50)
 
 ## Common Issues and Debugging Strategies
 ### Delayed Theme Updates
 Some clients, particularly Telegram for macOS, may fail to respond to `web_app_request_theme`. This is mitigated in `mockEnv.ts` by simulating theme events using launch parameters when the environment is mocked.
 
 ### Incorrect Safe Area Calculations
-Clients may report inaccurate safe area values. The `mockEnv.ts` file demonstrates a workaround by returning zero insets (`{ left: 0, top: 0, right: 0, bottom: 0 }`) during development to simulate edge-to-edge layouts.
+Clients may report inaccurate safe area values. The `mockEnv.ts` file demonstrates a workaround by returning zero insets (`{ left: 0, top: 0, right: 0, bottom: 0 }`) during development to simulate edge-to-edge layouts. The implementation of a 12px margin-top on the first child of `.safe-area-container` specifically addresses iOS close button overlap issues caused by incorrect `contentSafeAreaInsets` values.
 
 ### Viewport Mount Timeout
 The viewport.mount() call may hang on certain platforms like macOS Telegram. The solution is to use timeout protection with Promise.race:
@@ -210,6 +237,7 @@ A common misconception is that bindCssVars() creates safe area variables. It doe
 - Test on real devices when possible, as mocked environments may not reflect actual behavior
 - Check console logs for timeout warnings from viewport mounting
 - Verify that miniApp.ready() is called even when initialization fails
+- Inspect the computed styles of `.safe-area-container` and its first child to verify the 12px margin-top is applied correctly
 
 ```mermaid
 flowchart TD
@@ -226,17 +254,20 @@ M[Debug Strategy] --> N[Enable logging in TMAInitializer]
 M --> O[Inspect themeParams.state]
 M --> P[Test with real launchParams]
 M --> Q[Check for timeout warnings]
+M --> R[Verify 12px margin-top on .safe-area-container first child]
 ```
 
 **Diagram sources**
 - [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L60-L79)
 - [mockEnv.ts](file://passion/src/mockEnv.ts#L25-L45)
 - [page.tsx](file://passion/src/app/theme-params/page.tsx#L10-L11)
+- [globals.css](file://passion/src/app/_assets/globals.css#L46-L50)
 
 **Section sources**
 - [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L60-L79)
 - [mockEnv.ts](file://passion/src/mockEnv.ts#L25-L45)
 - [page.tsx](file://passion/src/app/theme-params/page.tsx#L10-L11)
+- [globals.css](file://passion/src/app/_assets/globals.css#L46-L50)
 
 ## Best Practices for Theme-Responsive Components
 - Always use `var(--tg-theme-*)` variables for colors to ensure theme consistency.
@@ -249,6 +280,8 @@ M --> Q[Check for timeout warnings]
 - Test components in both light and dark modes using mocked themes.
 - Use `useSignal(themeParams.state)` to reactively respond to theme changes in logic.
 - Fall back to sensible defaults (e.g., `white`, `black`) when variables are undefined.
+- Leverage the enhanced safe area CSS variables (`--sat`, `--sar`, `--sab`, `--sal`) in custom components when needed.
+- Utilize the 12px margin-top on first child of `.safe-area-container` to prevent iOS close button overlap instead of relying on JavaScript-based padding calculations.
 
 Following these practices ensures a seamless integration with Telegram’s UI and enhances user experience across all platforms.
 
@@ -256,6 +289,7 @@ Following these practices ensures a seamless integration with Telegram’s UI an
 - [globals.css](file://passion/src/app/_assets/globals.css#L2)
 - [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L26-L125)
 - [page.tsx](file://passion/src/app/theme-params/page.tsx#L10)
+- [globals.css](file://passion/src/app/_assets/globals.css#L46-L50)
 
 ## Conclusion
-The theme and viewport integration system in this Telegram Mini App enables dynamic, responsive UIs that adapt to both visual themes and device geometry. By leveraging the updated @tma.js/sdk v3.x initialization pattern with individual mount() calls, timeout protection for viewport.mount(), and guaranteed miniApp.ready() calls, the application maintains visual consistency with Telegram while ensuring reliable initialization across all platforms. The system correctly handles the distinction between viewport dimension variables (created by bindCssVars()) and safe area values (accessed via signals), providing a robust foundation for adaptive UI development. Proper initialization, CSS variable usage, and debugging strategies are essential for a robust implementation.
+The theme and viewport integration system in this Telegram Mini App enables dynamic, responsive UIs that adapt to both visual themes and device geometry. By leveraging the updated @tma.js/sdk v3.x initialization pattern with individual mount() calls, timeout protection for viewport.mount(), and guaranteed miniApp.ready() calls, the application maintains visual consistency with Telegram while ensuring reliable initialization across all platforms. The system correctly handles the distinction between viewport dimension variables (created by bindCssVars()) and safe area values (accessed via signals), providing a robust foundation for adaptive UI development. The enhanced `globals.css` with comprehensive safe area support using CSS variables (`--sat`, `--sar`, `--sab`, `--sal`) and the implementation of a 12px margin-top on the first child of `.safe-area-container` to fix iOS close button overlap represent significant improvements over the previous JavaScript-based approach. Proper initialization, CSS variable usage, and debugging strategies are essential for a robust implementation.

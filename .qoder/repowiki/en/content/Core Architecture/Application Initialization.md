@@ -2,23 +2,19 @@
 
 <cite>
 **Referenced Files in This Document**   
-- [init.ts](file://passion/src/core/init.ts) - *Updated for TMA SDK v3.x API*
-- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx) - *New component encapsulating SDK setup*
-- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx) - *Added for dynamic safe area management*
-- [Root.tsx](file://passion/components/Root/Root.tsx) - *Integration point for new components*
-- [layout.tsx](file://passion/app/layout.tsx) - *Layout integration*
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx) - *Updated with enhanced diagnostic logging*
+- [layout.tsx](file://passion/src/app/layout.tsx) - *Added web app meta tags*
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx) - *Enhanced with diagnostic logging*
 </cite>
 
 ## Update Summary
 **Changes Made**   
-- Added new section "TMAInitializer Component" to document the new initialization component
-- Added new section "SafeAreaProvider and Dynamic Safe Area Management" for safe area handling
-- Updated "Initialization Overview" to reflect component-based initialization
-- Updated "Component Mounting Process" to align with new TMAInitializer implementation
-- Updated "Error Handling and Troubleshooting" with new viewport mounting timeout strategy
-- Removed outdated references to mountBackButton.ifAvailable and mountMiniAppSync
-- Added code examples from new component implementations
-- Updated diagram sources to reflect actual code structure
+- Updated **TMAInitializer Component** section with enhanced diagnostic logging details
+- Added information about delays after viewport.expand and requestFullscreen calls
+- Included logging of final viewport state with isExpanded, isFullscreen, contentSafeAreaInsets, and safeAreaInsets values
+- Added documentation for meta tags apple-mobile-web-app-capable and mobile-web-app-capable in root layout
+- Updated code examples to reflect improved diagnostic capabilities
+- Enhanced troubleshooting guidance with final state verification
 
 ## Table of Contents
 1. [Initialization Overview](#initialization-overview)
@@ -42,7 +38,7 @@ The initialization sequence follows a structured approach that ensures proper se
 The initialization process begins when the application loads and is designed to handle various configuration options that affect debugging, development tools, and platform-specific behaviors. The function accepts an options object containing three key properties: `debug`, `eruda`, and `mockForMacOS`, which control different aspects of the initialization behavior.
 
 **Section sources**
-- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L22-L161) - *Added in recent commit*
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L22-L187) - *Updated with enhanced diagnostic logging*
 - [init.ts](file://passion/src/core/init.ts#L20-L81) - *Updated for TMA SDK v3.x*
 
 ## TMAInitializer Component
@@ -53,8 +49,9 @@ The component follows a specific initialization sequence:
 1. Environment detection to verify the application is running within a Telegram context
 2. Mounting of core SDK components in the correct order
 3. Binding of CSS variables for theme and viewport management
-4. Requesting expanded viewport and fullscreen mode
-5. Signaling application readiness to Telegram
+4. Requesting expanded viewport and fullscreen mode with diagnostic delays
+5. Logging final viewport state including safe area insets
+6. Signaling application readiness to Telegram
 
 ```typescript
 'use client';
@@ -137,21 +134,37 @@ export function TMAInitializer() {
           console.error('[TMAInitializer] themeParams.bindCssVars failed:', error);
         }
 
-        // 5. Request expanded viewport and fullscreen
+        // 5. Request expanded viewport and fullscreen with diagnostic delays
         if (viewportMounted && viewport.isMounted()) {
           try {
             viewport.expand();
             console.log('[TMAInitializer] viewport expanded');
+            console.log('[TMAInitializer] isExpanded:', viewport.isExpanded());
           } catch (error) {
             console.warn('[TMAInitializer] viewport.expand failed:', error);
           }
 
+          // Wait for expand to complete
+          await new Promise(resolve => setTimeout(resolve, 100));
+
           try {
             await viewport.requestFullscreen();
             console.log('[TMAInitializer] fullscreen requested');
+            console.log('[TMAInitializer] isFullscreen:', viewport.isFullscreen?.());
           } catch (error) {
             console.warn('[TMAInitializer] fullscreen request failed:', error);
           }
+
+          // Wait for fullscreen to settle
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+          // Log final viewport state for diagnostics
+          console.log('[TMAInitializer] Final viewport state:', {
+            isExpanded: viewport.isExpanded?.(),
+            isFullscreen: viewport.isFullscreen?.(),
+            contentSafeAreaInsets: viewport.contentSafeAreaInsets?.(),
+            safeAreaInsets: viewport.safeAreaInsets?.(),
+          });
         }
 
         setInitialized(true);
@@ -185,9 +198,10 @@ The component implements several critical behaviors:
 - **Error resilience**: Failed component mounting does not halt the entire initialization process
 - **Always signal ready**: The `miniApp.ready()` call is made in the `finally` block to ensure the loading screen is removed even if initialization fails
 - **Conditional execution**: All operations are wrapped in availability checks to prevent errors on platforms where certain features are not supported
+- **Enhanced diagnostics**: Added delays after viewport.expand and requestFullscreen calls, and comprehensive logging of final viewport state
 
 **Section sources**
-- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L22-L161) - *Added in recent commit*
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L22-L187) - *Updated with enhanced diagnostic logging*
 
 ## SafeAreaProvider and Dynamic Safe Area Management
 
@@ -202,7 +216,7 @@ The component implements a multi-layered approach to safe area management:
 'use client';
 
 import { type ReactNode, useEffect, useState } from 'react';
-import { viewport } from '@tma.js/sdk-react';
+import { viewport, useSignal } from '@tma.js/sdk-react';
 
 interface SafeAreaInsets {
   top: number;
@@ -216,97 +230,41 @@ interface SafeAreaProviderProps {
 }
 
 export function SafeAreaProvider({ children }: SafeAreaProviderProps) {
-  const [insets, setInsets] = useState<SafeAreaInsets>({
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-  });
+  const contentInsets = useSignal(viewport.contentSafeAreaInsets);
+  const fallbackInsets = useSignal(viewport.safeAreaInsets);
+  const isExpanded = useSignal(viewport.isExpanded);
+
+  const insets: SafeAreaInsets = {
+    top: Math.max(contentInsets?.top ?? 0, fallbackInsets?.top ?? 0),
+    bottom: Math.max(contentInsets?.bottom ?? 0, fallbackInsets?.bottom ?? 0),
+    left: Math.max(contentInsets?.left ?? 0, fallbackInsets?.left ?? 0),
+    right: Math.max(contentInsets?.right ?? 0, fallbackInsets?.right ?? 0),
+  };
 
   useEffect(() => {
-    // Check if viewport is mounted
-    if (!viewport.isMounted()) {
-      console.warn('[SafeAreaProvider] Viewport not mounted');
-      return;
-    }
+    console.log('[SafeAreaProvider] Full diagnostic:', {
+      contentInsets,
+      fallbackInsets,
+      isExpanded,
+      usingContentInsets: !!contentInsets,
+      insetsAreSame: contentInsets && fallbackInsets && 
+        contentInsets.top === fallbackInsets.top && 
+        contentInsets.bottom === fallbackInsets.bottom,
+    });
+  }, [contentInsets, fallbackInsets, isExpanded, insets]);
 
-    /**
-     * Get safe area insets with fallback strategy
-     * 1. Try contentSafeAreaInsets (Bot API 8.0+)
-     * 2. Fallback to safeAreaInsets (older versions)
-     * 3. Ultimate fallback to zero insets
-     */
-    const getSafeAreaInsets = (): SafeAreaInsets => {
-      try {
-        // Try Bot API 8.0+ method first
-        const contentInsets = viewport.contentSafeAreaInsets();
-        if (contentInsets) {
-          return contentInsets as SafeAreaInsets;
-        }
-      } catch (error) {
-        console.warn('[SafeAreaProvider] contentSafeAreaInsets unavailable:', error);
-      }
-
-      try {
-        // Fallback to older API
-        const safeInsets = viewport.safeAreaInsets();
-        if (safeInsets) {
-          return safeInsets as SafeAreaInsets;
-        }
-      } catch (error) {
-        console.warn('[SafeAreaProvider] safeAreaInsets unavailable:', error);
-      }
-
-      // Ultimate fallback
-      return { top: 0, bottom: 0, left: 0, right: 0 };
-    };
-
-    // Set initial insets
-    const initialInsets = getSafeAreaInsets();
-    setInsets(initialInsets);
-
-    // Subscribe to changes using .sub() method (NOT .subscribe())
-    let unsubscribe: (() => void) | undefined;
-
-    try {
-      if (viewport.contentSafeAreaInsets && typeof viewport.contentSafeAreaInsets.sub === 'function') {
-        unsubscribe = viewport.contentSafeAreaInsets.sub((newInsets) => {
-          if (newInsets) {
-            setInsets(newInsets as SafeAreaInsets);
-          }
-        });
-      } else if (viewport.safeAreaInsets && typeof viewport.safeAreaInsets.sub === 'function') {
-        // Fallback to safeAreaInsets subscription
-        unsubscribe = viewport.safeAreaInsets.sub((newInsets) => {
-          if (newInsets) {
-            setInsets(newInsets as SafeAreaInsets);
-          }
-        });
-      }
-    } catch (error) {
-      console.error('[SafeAreaProvider] Failed to subscribe to insets:', error);
-    }
-
-    // Cleanup function - CRITICAL for preventing memory leaks
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
-  }, []);
+  const telegramUIBottomPadding = 8;
 
   return (
     <div
       className="safe-area-container"
       style={{
-        paddingTop: `${insets.top}px`,
-        paddingBottom: `${insets.bottom}px`,
-        paddingLeft: `${insets.left}px`,
-        paddingRight: `${insets.right}px`,
-        height: '100%',
-        boxSizing: 'border-box',
-        overflowY: 'auto',
-        overflowX: 'hidden',
+        position: 'absolute',
+        top: `${insets.top}px`,
+        bottom: `${insets.bottom}px`,
+        left: `${insets.left}px`,
+        right: `${insets.right}px`,
+        paddingBottom: `${telegramUIBottomPadding}px`,
       }}
     >
       {children}
@@ -321,6 +279,7 @@ Key features of the `SafeAreaProvider`:
 - **Type safety**: Fully typed with TypeScript interfaces
 - **Graceful degradation**: Provides fallback values when safe area information is unavailable
 - **Inline styling**: Applies padding through inline styles for immediate effect
+- **Diagnostic logging**: Comprehensive logging of safe area state for troubleshooting
 
 The component should be used as a wrapper around the application's main content, typically in the root layout:
 
@@ -333,6 +292,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+      </head>
       <body>
         <TMAInitializer />
         <SafeAreaProvider>
@@ -345,7 +308,7 @@ export default function RootLayout({
 ```
 
 **Section sources**
-- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L25-L123) - *Added in recent commit*
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L25-L92) - *Enhanced with diagnostic logging*
 
 ## SDK Setup and Configuration
 
