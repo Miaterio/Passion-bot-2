@@ -68,12 +68,8 @@ export function SafeAreaProvider({ children }: SafeAreaProviderProps) {
     });
   }, [contentInsets, fallbackInsets, isExpanded, insets]);
 
-  // Calculate additional padding for Telegram UI elements
-  // WORKAROUND: contentSafeAreaInsets doesn't correctly account for Telegram's close button on iOS
-  // GitHub issue: https://github.com/TelegramMessenger/Telegram-iOS/issues/1377
-  // In fullscreen mode, Telegram adds a ~44-60px close button at the top, but contentSafeAreaInsets.bottom is often 0
-  const telegramUITopPadding = contentInsets && contentInsets.bottom === 0 ? 20 : 0;
-  const telegramUIBottomPadding = 8; // Small padding for better spacing
+  // Small bottom padding for better spacing
+  const telegramUIBottomPadding = 8;
 
   return (
     <div
@@ -85,8 +81,7 @@ export function SafeAreaProvider({ children }: SafeAreaProviderProps) {
         bottom: `${insets.bottom}px`,
         left: `${insets.left}px`,
         right: `${insets.right}px`,
-        // Add padding inside the container as workaround for incorrect contentSafeAreaInsets on iOS
-        paddingTop: `${telegramUITopPadding}px`,
+        // Only bottom padding - top margin handled by CSS for first child
         paddingBottom: `${telegramUIBottomPadding}px`,
       }}
     >

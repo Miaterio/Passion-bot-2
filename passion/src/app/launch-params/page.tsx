@@ -13,6 +13,7 @@ export default function LaunchParamsPage() {
     <Page>
       <List>
         <DisplayData
+          header="Launch Parameters"
           rows={[
             { title: 'tgWebAppPlatform', value: lp.tgWebAppPlatform },
             { title: 'tgWebAppShowSettings', value: lp.tgWebAppShowSettings },

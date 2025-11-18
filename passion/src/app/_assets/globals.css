@@ -43,6 +43,12 @@ body {
   background: var(--tg-theme-bg-color, #ffffff);
 }
 
+/* Add top margin to first child to prevent overlap with Telegram close button */
+/* This compensates for incorrect contentSafeAreaInsets on iOS */
+.safe-area-container > :first-child {
+  margin-top: 12px;
+}
+
 /* Loading indicator */
 .root__loading {
   display: flex;

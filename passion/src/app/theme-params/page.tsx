@@ -13,6 +13,7 @@ export default function ThemeParamsPage() {
     <Page>
       <List>
         <DisplayData
+          header="Theme Parameters"
           rows={Object.entries(tp).map(([title, value]) => ({
             title: title
               .replace(/[A-Z]/g, (m) => `_${m.toLowerCase()}`)
