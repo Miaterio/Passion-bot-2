@@ -14,11 +14,13 @@ export default function Home() {
 
   return (
     <div className="app-container" style={{
-      minHeight: '100vh',
+      height: '100%',
+      overflowY: 'auto',
       padding: '20px',
-      background: 'var(--tg-theme-bg-color)',
+      background: '#100024',
       color: 'var(--tg-theme-text-color)',
-    }}>
+      WebkitOverflowScrolling: 'touch',
+    } as React.CSSProperties}>
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
         {/* Header */}
         <header style={{
@@ -166,12 +168,8 @@ export default function Home() {
         </section>
       </div>
 
-      {/* Debug: Content Safe Area Overlays (all 4 sides) */}
-      <div className="debug-safe-area-top" />
-      <div className="debug-safe-area-bottom" />
-      <div className="debug-safe-area-left" />
-      <div className="debug-safe-area-right" />
-      <DebugSafeAreaInfo />
+      {/* Debug: Safe Area Info (uncomment to enable) */}
+      {/* <DebugSafeAreaInfo /> */}
     </div>
   );
 }

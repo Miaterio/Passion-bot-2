@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactNode, useEffect, useState } from 'react';
-import { init, miniApp, viewport } from '@tma.js/sdk';
+import { init, miniApp, viewport, swipeBehavior } from '@tma.js/sdk';
 import { SafeAreaProvider } from '@/components/SafeAreaProvider/SafeAreaProvider';
 import { DebugConsole } from '@/components/DebugConsole/DebugConsole';
 
@@ -61,6 +61,27 @@ export function Providers({ children }: ProvidersProps) {
                 }
             } catch (error) {
                 console.warn('⚠️ Could not mount miniApp:', error);
+            }
+
+            try {
+                // Disable vertical swipes to prevent app from collapsing on scroll
+                // Requires Bot API 7.7+
+                // Must mount swipeBehavior before using it
+                if (swipeBehavior.mount.isAvailable()) {
+                    swipeBehavior.mount();
+                    console.log('✅ SwipeBehavior mounted');
+
+                    if (swipeBehavior.disableVertical.isAvailable()) {
+                        swipeBehavior.disableVertical();
+                        console.log('✅ Vertical swipes disabled - app won\'t collapse on scroll');
+                    } else {
+                        console.warn('⚠️ disableVertical not available (requires Bot API 7.7+)');
+                    }
+                } else {
+                    console.warn('⚠️ SwipeBehavior not available');
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not disable vertical swipes:', error);
             }
         }
 
