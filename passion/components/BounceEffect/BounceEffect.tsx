@@ -23,7 +23,6 @@ export function BounceEffect({
 }: BounceEffectProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
-    const [pullDistance, setPullDistance] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
 
     const touchStartY = useRef(0);
@@ -65,12 +64,12 @@ export function BounceEffect({
                 setIsAnimating(true);
             });
 
-            // Small delay to ensure transition is applied before changing transform
-            requestAnimationFrame(() => {
-                flushSync(() => {
-                    setPullDistance(0);
+            // Set CSS variable directly for instant visual update
+            if (contentRef.current) {
+                requestAnimationFrame(() => {
+                    contentRef.current?.style.setProperty('--pull-distance', '0');
                 });
-            });
+            }
 
             // Reset animating state after animation
             setTimeout(() => {
@@ -113,28 +112,29 @@ export function BounceEffect({
 
             moveCount++;
 
-            // Log every 10th move to avoid spam
-            if (moveCount % 10 === 0) {
-                const logData = {
-                    moveCount,
-                    scrollTop,
-                    deltaY,
-                    isScrollable,
-                    isAtTop,
-                    isAtBottom,
-                    isPulling: isPulling.current,
-                    currentPullDistance: currentPullDistance.current
-                };
-                console.log('👉 touchMove', logData);
-                addDebugLog('👉 touchMove', logData);
-            }
-
-            // Detect overscroll attempt
-            // If content is not scrollable, always allow bounce
-            // If scrollable, only bounce at edges
+            // Detect overscroll attempt first (before throttling) to prevent preventDefault issues
             const shouldBounce = !isScrollable || (isAtTop && deltaY > 0) || (isAtBottom && deltaY < 0);
 
             if (shouldBounce) {
+                // Prevent default scroll immediately
+                e.preventDefault();
+
+                // Log every 10th move to avoid spam
+                if (moveCount % 10 === 0) {
+                    const logData = {
+                        moveCount,
+                        scrollTop,
+                        deltaY,
+                        isScrollable,
+                        isAtTop,
+                        isAtBottom,
+                        isPulling: isPulling.current,
+                        currentPullDistance: currentPullDistance.current
+                    };
+                    console.log('👉 touchMove', logData);
+                    addDebugLog('👉 touchMove', logData);
+                }
+
                 if (!isPulling.current) {
                     const logData = { deltaY, isScrollable, isAtTop, isAtBottom };
                     console.log('🎯 Started pulling', logData);
@@ -143,9 +143,6 @@ export function BounceEffect({
 
                 isPulling.current = true;
                 setIsAnimating(false);
-
-                // Prevent default scroll
-                e.preventDefault();
 
                 // Calculate pull distance with resistance
                 const resistedDelta = deltaY * resistance;
@@ -157,10 +154,12 @@ export function BounceEffect({
                 // Update ref immediately
                 currentPullDistance.current = clampedDelta;
 
-                // Use RAF for smooth updates
+                // Update CSS variable directly - NO React state, instant 60fps
                 if (rafId.current) cancelAnimationFrame(rafId.current);
                 rafId.current = requestAnimationFrame(() => {
-                    setPullDistance(clampedDelta);
+                    if (contentRef.current) {
+                        contentRef.current.style.setProperty('--pull-distance', `${clampedDelta}px`);
+                    }
                 });
             } else {
                 // Normal scroll - reset if was pulling
@@ -205,17 +204,30 @@ export function BounceEffect({
         <div
             ref={containerRef}
             style={{
-                height: '100%',
+                minHeight: '100%',
+                height: 'auto',
                 overflowY: 'auto',
                 WebkitOverflowScrolling: 'touch',
+                // Add padding to prevent content clipping during bounce
+                paddingTop: `${maxPullDistance}px`,
+                paddingBottom: `${maxPullDistance}px`,
+                marginTop: `-${maxPullDistance}px`,
+                marginBottom: `-${maxPullDistance}px`,
             }}
         >
             <div
                 ref={contentRef}
                 style={{
-                    transform: `translateY(${pullDistance}px)`,
+                    // CSS variable for pull distance - updated directly, no React re-render
+                    ['--pull-distance' as string]: '0px',
+                    // GPU acceleration with translate3d using CSS variable
+                    transform: 'translate3d(0, var(--pull-distance), 0)',
+                    // Remove contain to allow overflow
+                    // CSS containment for rendering optimization
+                    contain: 'layout style paint',
+                    // Only use willChange during interaction to save memory
+                    willChange: (isPulling.current || isAnimating) ? 'transform' : 'auto',
                     transition: isAnimating ? 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)' : 'none',
-                    willChange: 'transform',
                 }}
             >
                 {children}
