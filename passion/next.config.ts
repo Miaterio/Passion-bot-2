@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  /* Dev indicators can only control position, not disable them in dev mode */
 };
 
 export default nextConfig;

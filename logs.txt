@@ -1,0 +1,365 @@
+[819] 👆 touchStart
+{
+  "touchY": 378,
+  "scrollTop": 0,
+  "scrollHeight": 844,
+  "clientHeight": 844
+}
+
+[865] 🎯 Started pulling
+{
+  "deltaY": 8,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true
+}
+
+[008] 👉 touchMove
+{
+  "moveCount": 10,
+  "scrollTop": 0,
+  "deltaY": 87,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true,
+  "isPulling": true,
+  "currentPullDistance": 30.8
+}
+
+[176] 👉 touchMove
+{
+  "moveCount": 20,
+  "scrollTop": 0,
+  "deltaY": 174,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true,
+  "isPulling": true,
+  "currentPullDistance": 66.4
+}
+
+[260] 👇 touchEnd
+{
+  "isPulling": true,
+  "pullDistance": 83.2,
+  "moveCount": 25
+}
+
+[260] 🔄 resetPull called
+{
+  "isPulling": true,
+  "currentPullDistance": 83.2
+}
+
+[562] ✅ Animation complete
+
+[368] 👆 touchStart
+{
+  "touchY": 355,
+  "scrollTop": 0,
+  "scrollHeight": 844,
+  "clientHeight": 844
+}
+
+[384] 🎯 Started pulling
+{
+  "deltaY": -10,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true
+}
+
+[534] 👉 touchMove
+{
+  "moveCount": 10,
+  "scrollTop": 0,
+  "deltaY": -98,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true,
+  "isPulling": true,
+  "currentPullDistance": -34.800000000000004
+}
+
+[619] 👇 touchEnd
+{
+  "isPulling": true,
+  "pullDistance": -53.2,
+  "moveCount": 14
+}
+
+[620] 🔄 resetPull called
+{
+  "isPulling": true,
+  "currentPullDistance": -53.2
+}
+
+[921] ✅ Animation complete
+
+[040] 👆 touchStart
+{
+  "touchY": 399,
+  "scrollTop": 0,
+  "scrollHeight": 844,
+  "clientHeight": 844
+}
+
+[068] 🎯 Started pulling
+{
+  "deltaY": -10,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true
+}
+
+[219] 👉 touchMove
+{
+  "moveCount": 10,
+  "scrollTop": 0,
+  "deltaY": -166,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true,
+  "isPulling": true,
+  "currentPullDistance": -60
+}
+
+[386] 👉 touchMove
+{
+  "moveCount": 20,
+  "scrollTop": 0,
+  "deltaY": -254,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true,
+  "isPulling": true,
+  "currentPullDistance": -96.80000000000001
+}
+
+[437] 👇 touchEnd
+{
+  "isPulling": true,
+  "pullDistance": -114,
+  "moveCount": 22
+}
+
+[438] 🔄 resetPull called
+{
+  "isPulling": true,
+  "currentPullDistance": -114
+}
+
+[738] ✅ Animation complete
+
+[927] 👆 touchStart
+{
+  "touchY": 416,
+  "scrollTop": 0,
+  "scrollHeight": 844,
+  "clientHeight": 844
+}
+
+[954] 🎯 Started pulling
+{
+  "deltaY": -16,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true
+}
+
+[104] 👉 touchMove
+{
+  "moveCount": 10,
+  "scrollTop": 0,
+  "deltaY": -185,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true,
+  "isPulling": true,
+  "currentPullDistance": -67.2
+}
+
+[271] 👉 touchMove
+{
+  "moveCount": 20,
+  "scrollTop": 0,
+  "deltaY": -278,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true,
+  "isPulling": true,
+  "currentPullDistance": -108.4
+}
+
+[439] 👉 touchMove
+{
+  "moveCount": 30,
+  "scrollTop": 0,
+  "deltaY": -336,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true,
+  "isPulling": true,
+  "currentPullDistance": -120
+}
+
+[473] 👇 touchEnd
+{
+  "isPulling": true,
+  "pullDistance": -120,
+  "moveCount": 31
+}
+
+[474] 🔄 resetPull called
+{
+  "isPulling": true,
+  "currentPullDistance": -120
+}
+
+[775] ✅ Animation complete
+
+[997] 👆 touchStart
+{
+  "touchY": 406,
+  "scrollTop": 0,
+  "scrollHeight": 844,
+  "clientHeight": 844
+}
+
+[024] 🎯 Started pulling
+{
+  "deltaY": -12,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true
+}
+
+[174] 👉 touchMove
+{
+  "moveCount": 10,
+  "scrollTop": 0,
+  "deltaY": -160,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true,
+  "isPulling": true,
+  "currentPullDistance": -57.6
+}
+
+[342] 👉 touchMove
+{
+  "moveCount": 20,
+  "scrollTop": 0,
+  "deltaY": -258,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true,
+  "isPulling": true,
+  "currentPullDistance": -99.60000000000001
+}
+
+[509] 👉 touchMove
+{
+  "moveCount": 30,
+  "scrollTop": 0,
+  "deltaY": -307,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true,
+  "isPulling": true,
+  "currentPullDistance": -120
+}
+
+[676] 👉 touchMove
+{
+    "moveCount": 40,
+  "scrollTop": 0,
+  "deltaY": -336,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true,
+  "isPulling": true,
+  "currentPullDistance": -120
+}
+
+[776] 👇 touchEnd
+{
+  "isPulling": true,
+  "pullDistance": -120,
+  "moveCount": 44
+}
+
+[777] 🔄 resetPull called
+{
+  "isPulling": true,
+  "currentPullDistance": -120
+}
+
+[078] ✅ Animation complete
+
+[303] 👆 touchStart
+{
+  "touchY": 399,
+  "scrollTop": 0,
+  "scrollHeight": 844,
+  "clientHeight": 844
+}
+
+[328] 🎯 Started pulling
+{
+  "deltaY": -11,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true
+}
+
+[478] 👉 touchMove
+{
+  "moveCount": 10,
+  "scrollTop": 0,
+  "deltaY": -163,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true,
+  "isPulling": true,
+  "currentPullDistance": -60.400000000000006
+}
+
+[645] 👉 touchMove
+{
+  "moveCount": 20,
+  "scrollTop": 0,
+  "deltaY": -247,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true,
+  "isPulling": true,
+  "currentPullDistance": -96.4
+}
+
+[812] 👉 touchMove
+{
+  "moveCount": 30,
+  "scrollTop": 0,
+  "deltaY": -298,
+  "isScrollable": false,
+  "isAtTop": true,
+  "isAtBottom": true,
+  "isPulling": true,
+  "currentPullDistance": -117.60000000000001
+}
+
+[964] 👇 touchEnd
+{
+  "isPulling": true,
+  "pullDistance": -120,
+  "moveCount": 38
+}
+
+[965] 🔄 resetPull called
+{
+  "isPulling": true,
+  "currentPullDistance": -120
+}
+
+[266] ✅ Animation complete
