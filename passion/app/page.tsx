@@ -60,6 +60,15 @@ function Button({ children, active }: ButtonProps) {
 }
 
 export default function Page() {
+  const [isAndroid, setIsAndroid] = React.useState(false);
+
+  React.useEffect(() => {
+    // Detect Android platform
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const isAndroidDevice = /android/.test(userAgent);
+    setIsAndroid(isAndroidDevice);
+  }, []);
+
   return (
     <div className="w-full h-screen relative overflow-hidden flex flex-col justify-center items-start">
       {/* Fixed Background Color */}
@@ -73,12 +82,19 @@ export default function Page() {
       {/* Bottom Gradient Shadow - Fixed */}
       <div className="fixed bottom-0 left-0 w-full h-[200px] bg-gradient-to-t from-[#100024] to-transparent z-[2]" />
 
-      {/* Status Bar & Telegram UI Placeholders */}
-      <div className="w-full h-[44px] bg-transparent z-20 shrink-0" />
+      {/* Status Bar Placeholder - Hidden on Android, Visible on iOS */}
+      {!isAndroid && (
+        <div className="w-full h-[44px] bg-transparent z-20 shrink-0" />
+      )}
+
+      {/* Telegram UI Placeholder - Visible on both */}
       <div className="w-full h-[46px] bg-transparent z-20 shrink-0" />
 
+      {/* Extra spacing for Android */}
+      {isAndroid && <div className="w-full h-[12px] bg-transparent z-20 shrink-0" />}
+
       {/* Main Content Area - Safe Area Container */}
-      <div className="w-full flex-1 pt-4 pl-4 pr-4 pb-[34px] flex flex-col justify-between items-center z-20 tg-content-safe-area-inset">
+      <div className={`w-full flex-1 pt-4 pl-4 pr-4 ${isAndroid ? 'pb-[46px]' : 'pb-[34px]'} flex flex-col justify-between items-center z-20 tg-content-safe-area-inset`}>
         {/* Top Row */}
         <div className="w-full flex justify-between items-center">
           <Button>
@@ -105,7 +121,6 @@ export default function Page() {
           </Button>
         </div>
       </div>
-
 
     </div>
   );

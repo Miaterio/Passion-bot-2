@@ -1,0 +1,12 @@
+{
+    "name": "passion-bot-core",
+    "version": "1.0.0",
+    "description": "Core bot dependencies for migration",
+    "dependencies": {
+        "grammy": "^1.38.2",
+        "@grammyjs/conversations": "^2.1.0",
+        "@grammyjs/storage-file": "^2.5.1"
+    },
+    "devDependencies": {},
+    "note": "Extract only bot-related dependencies for Next.js project"
+}
