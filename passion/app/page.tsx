@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-
-const imgBgAvatar = "/bg-avatar.png";
+import { ChatInterface } from '../src/components/ChatInterface';
+import { AvatarSlider } from '../src/components/AvatarSlider';
+import { Avatar, AVATARS } from '../src/lib/bot/prompts';
 
 // Icon Components using actual Vuesax Bold SVG paths
 const BroomIcon = ({ fill = "white" }: { fill?: string }) => (
@@ -45,15 +46,19 @@ const UserIcon = ({ fill = "white" }: { fill?: string }) => (
 type ButtonProps = {
   children: React.ReactNode;
   active?: boolean;
+  onClick?: () => void;
 };
 
-function Button({ children, active }: ButtonProps) {
+function Button({ children, active, onClick }: ButtonProps) {
   const bgClass = active
     ? 'bg-gradient-to-b from-[rgba(255,168.80,56.07,0.25)] to-[rgba(255,169,56,0)]'
     : 'bg-gradient-to-b from-[rgba(255,255,255,0.25)] to-[rgba(255,255,255,0)]';
 
   return (
-    <div className={`p-[12px] shadow-[0px_1px_2px_rgba(255,255,255,0.15)_inset] rounded-[40px] backdrop-blur-[25px] flex justify-start items-center gap-[10px] ${bgClass}`}>
+    <div
+      onClick={onClick}
+      className={`p-[12px] shadow-[0px_1px_2px_rgba(255,255,255,0.15)_inset] rounded-[40px] backdrop-blur-[25px] flex justify-start items-center gap-[10px] ${bgClass} cursor-pointer transition-all duration-200 active:scale-95`}
+    >
       {children}
     </div>
   );
@@ -61,6 +66,9 @@ function Button({ children, active }: ButtonProps) {
 
 export default function Page() {
   const [isAndroid, setIsAndroid] = React.useState(false);
+  const [chatMode, setChatMode] = React.useState(false);
+  const [selectedAvatar, setSelectedAvatar] = React.useState<Avatar>(AVATARS[0]);
+  const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
 
   React.useEffect(() => {
     // Detect Android platform
@@ -69,18 +77,53 @@ export default function Page() {
     setIsAndroid(isAndroidDevice);
   }, []);
 
+  const handleAvatarSelect = (avatar: Avatar) => {
+    setSelectedAvatar(avatar);
+  };
+
+  const handleBack = () => {
+    setChatMode(false);
+  };
+
+  const toggleUserMenu = () => {
+    setIsUserMenuOpen(!isUserMenuOpen);
+  };
+
   return (
-    <div className="w-full h-screen relative overflow-hidden flex flex-col justify-center items-start">
+    <div className="w-full h-screen relative overflow-hidden flex flex-col justify-center items-start bg-[#100024]">
       {/* Fixed Background Color */}
       <div className="fixed inset-0 bg-[#100024] z-0" />
 
-      {/* Background Image - Fixed */}
-      <div className="fixed inset-0 z-[1]">
-        <img className="w-full h-full object-cover" src={imgBgAvatar} alt="" />
-      </div>
+      {/* Background Image Container - Bottom aligned with slider */}
+      <div className="fixed inset-0 z-[1] flex flex-col items-center justify-end">
+        {/* BG Avatar - Fullscreen when closed, fixed size when open, bottom aligned with slider top */}
+        <div
+          className="relative"
+          style={{
+            width: isUserMenuOpen ? '286px' : '100%',
+            height: isUserMenuOpen ? '620px' : '100%',
+            marginBottom: isUserMenuOpen ? '280px' : '0px',
+            transition: 'all 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
+            willChange: 'width, height, margin-bottom',
+          }}
+        >
+          <img
+            className="w-full h-full object-cover"
+            src={selectedAvatar.bgImage}
+            alt=""
+          />
+        </div>
 
-      {/* Bottom Gradient Shadow - Fixed */}
-      <div className="fixed bottom-0 left-0 w-full h-[200px] bg-gradient-to-t from-[#100024] to-transparent z-[2]" />
+        {/* Bottom Gradient Shadow - Positioned above slider */}
+        <div
+          className="absolute left-0 w-full h-[120px] bg-gradient-to-t from-[#100024] to-transparent"
+          style={{
+            bottom: isUserMenuOpen ? '280px' : '0px',
+            transition: 'bottom 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
+            willChange: 'bottom',
+          }}
+        />
+      </div>
 
       {/* Status Bar Placeholder - Hidden on Android, Visible on iOS */}
       {!isAndroid && (
@@ -94,32 +137,71 @@ export default function Page() {
       {isAndroid && <div className="w-full h-[12px] bg-transparent z-20 shrink-0" />}
 
       {/* Main Content Area - Safe Area Container */}
-      <div className={`w-full flex-1 pt-4 pl-4 pr-4 ${isAndroid ? 'pb-[46px]' : 'pb-[34px]'} flex flex-col justify-between items-center z-20 tg-content-safe-area-inset`}>
-        {/* Top Row */}
-        <div className="w-full flex justify-between items-center">
-          <Button>
-            <BroomIcon />
-          </Button>
-          <Button>
-            <FlashIcon />
-          </Button>
-        </div>
+      <div className={`w-full flex-1 flex flex-col z-20 tg-content-safe-area-inset overflow-hidden ${isAndroid ? 'pb-[46px]' : 'pb-[34px]'}`}>
 
-        {/* Bottom Row */}
-        <div className="w-full flex justify-between items-center">
-          <Button active>
-            <HomeIcon />
-          </Button>
-          <Button>
-            <ToggleIcon />
-          </Button>
-          <Button>
-            <SettingIcon />
-          </Button>
-          <Button>
-            <UserIcon />
-          </Button>
-        </div>
+        {!chatMode ? (
+          <>
+            <div className="flex-1 px-4 pt-4 relative">
+              {/* Top Row - Hide when user menu open */}
+              <div
+                className="w-full flex justify-between items-center mb-4 relative z-30 transition-opacity duration-300"
+                style={{
+                  opacity: isUserMenuOpen ? 0 : 1,
+                  pointerEvents: isUserMenuOpen ? 'none' : 'auto'
+                }}
+              >
+                <Button>
+                  <BroomIcon />
+                </Button>
+                <Button>
+                  <FlashIcon />
+                </Button>
+              </div>
+
+              {/* Avatar Slider Container - Slides up from bottom */}
+              <div
+                className="fixed bottom-0 left-0 w-full z-30"
+                style={{
+                  transform: isUserMenuOpen ? 'translateY(0)' : 'translateY(100%)',
+                  transition: 'transform 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
+                  willChange: 'transform',
+                }}
+              >
+                <AvatarSlider
+                  selectedAvatar={selectedAvatar}
+                  onSelect={handleAvatarSelect}
+                  onClose={toggleUserMenu}
+                />
+              </div>
+            </div>
+
+            {/* Bottom Row - Hide when user menu open */}
+            <div
+              className="w-full flex justify-between items-center px-4 pt-4 shrink-0 relative z-40 transition-opacity duration-300"
+              style={{
+                opacity: isUserMenuOpen ? 0 : 1,
+                pointerEvents: isUserMenuOpen ? 'none' : 'auto'
+              }}
+            >
+              <Button active={!isUserMenuOpen}>
+                <HomeIcon />
+              </Button>
+              <Button>
+                <ToggleIcon />
+              </Button>
+              <Button>
+                <SettingIcon />
+              </Button>
+              <Button active={isUserMenuOpen} onClick={toggleUserMenu}>
+                <UserIcon />
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 h-full">
+            <ChatInterface avatar={selectedAvatar} onBack={handleBack} />
+          </div>
+        )}
       </div>
 
     </div>
