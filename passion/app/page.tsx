@@ -107,9 +107,29 @@ export default function Page() {
     selection();
   };
 
-  const handleBack = () => {
+  const handleBack = React.useCallback(() => {
     setChatMode(false);
-  };
+  }, []);
+
+  // Handle Back Button visibility and events using low-level SDK
+  React.useEffect(() => {
+    // Dynamically import to avoid SSR issues if any, though we are in client component
+    import('@tma.js/sdk').then(({ postEvent, on, off }) => {
+      if (chatMode) {
+        postEvent('web_app_setup_back_button', { is_visible: true });
+        on('back_button_pressed', handleBack);
+      } else {
+        postEvent('web_app_setup_back_button', { is_visible: false });
+        off('back_button_pressed', handleBack);
+      }
+    });
+
+    return () => {
+      import('@tma.js/sdk').then(({ off }) => {
+        off('back_button_pressed', handleBack);
+      });
+    };
+  }, [chatMode, handleBack]);
 
   const toggleUserMenu = () => {
     impact('light');
