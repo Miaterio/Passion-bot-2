@@ -43,6 +43,7 @@ export function ChatInterface({ avatar, onBack, initData, onClear }: ChatInterfa
     const [isLoading, setIsLoading] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -51,6 +52,18 @@ export function ChatInterface({ avatar, onBack, initData, onClear }: ChatInterfa
     useEffect(() => {
         scrollToBottom();
     }, [messages, isTyping]);
+
+    // Keyboard handling: Scroll input into view on focus/resize
+    useEffect(() => {
+        const handleResize = () => {
+            if (document.activeElement === inputRef.current) {
+                inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Load initial history
     useEffect(() => {
@@ -157,7 +170,7 @@ export function ChatInterface({ avatar, onBack, initData, onClear }: ChatInterfa
     // But here it's uncontrolled.
     // We can use `useImperativeHandle` or just a `key` prop on ChatInterface to reset it.
     // Or, better: The parent passes a `clearTrigger` prop?
-    // Let's stick to the plan: "Add a onClear prop...". 
+    // Let's stick to the plan: "Add a onClear prop...".
     // Wait, if the parent calls API, how does ChatInterface know to clear `messages` state?
     // Maybe `onClear` is a callback FROM ChatInterface TO Parent? No.
     // Let's assume the parent will remount ChatInterface or we use a ref.
@@ -175,12 +188,12 @@ export function ChatInterface({ avatar, onBack, initData, onClear }: ChatInterfa
     // Changing `key` is the cleanest way to reset state.
 
     return (
-        <div className="w-full h-full flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 shrink-0 z-30">
+        <div className="w-full h-full relative">
+            {/* Header - Absolute Top */}
+            <div className="absolute top-0 left-0 w-full flex items-center justify-between p-4 z-30 pointer-events-none">
                 <button
                     onClick={onBack}
-                    className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                    className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-colors pointer-events-auto"
                 >
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
@@ -190,8 +203,16 @@ export function ChatInterface({ avatar, onBack, initData, onClear }: ChatInterfa
                 <div className="w-10" /> {/* Spacer */}
             </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {/* Messages - Absolute Full + Mask */}
+            <div
+                className="absolute inset-0 overflow-y-auto p-4 space-y-4 z-0"
+                style={{
+                    maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
+                    paddingTop: '80px',
+                    paddingBottom: '100px'
+                }}
+            >
                 {messages.length === 0 && (
                     <div className="text-center text-white/40 mt-10">
                         Начни общение с {avatar.name}...
@@ -222,14 +243,16 @@ export function ChatInterface({ avatar, onBack, initData, onClear }: ChatInterfa
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Input */}
-            <div className="p-4 shrink-0 z-30">
+            {/* Input - Absolute Bottom */}
+            <div className="absolute bottom-0 left-0 w-full p-4 z-30">
                 <div className="flex gap-2 items-end">
                     <input
+                        ref={inputRef}
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+                        onFocus={(e) => e.target.scrollIntoView({ behavior: "smooth", block: "end" })}
                         placeholder="Напиши сообщение..."
                         className="flex-1 bg-white/10 border border-white/20 rounded-full px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-[#FFAD3A] backdrop-blur-md"
                         disabled={isLoading}
