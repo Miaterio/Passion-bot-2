@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Avatar, AVATARS } from '../lib/bot/prompts';
+import { useHaptic } from '../hooks/useHaptic';
 
 interface AvatarSliderProps {
     selectedAvatar: Avatar | null;
@@ -13,6 +14,7 @@ export function AvatarSlider({ selectedAvatar, onSelect, onClose }: AvatarSlider
     );
     const [touchStart, setTouchStart] = useState(0);
     const [touchEnd, setTouchEnd] = useState(0);
+    const { impact, selection, notification } = useHaptic();
 
     const currentAvatar = AVATARS[currentIndex];
 
@@ -20,12 +22,14 @@ export function AvatarSlider({ selectedAvatar, onSelect, onClose }: AvatarSlider
         const newIndex = currentIndex > 0 ? currentIndex - 1 : AVATARS.length - 1;
         setCurrentIndex(newIndex);
         onSelect(AVATARS[newIndex]);
+        impact('soft');
     };
 
     const handleNext = () => {
         const newIndex = currentIndex < AVATARS.length - 1 ? currentIndex + 1 : 0;
         setCurrentIndex(newIndex);
         onSelect(AVATARS[newIndex]);
+        selection();
     };
 
     // Swipe handlers
@@ -59,6 +63,7 @@ export function AvatarSlider({ selectedAvatar, onSelect, onClose }: AvatarSlider
         // For now, just cycle through all avatars
         // In production, this would filter by gender
         handleNext();
+        impact('light');
     };
 
     return (
@@ -67,7 +72,10 @@ export function AvatarSlider({ selectedAvatar, onSelect, onClose }: AvatarSlider
             <div className="w-full flex items-center justify-between">
                 {/* Close Button */}
                 <button
-                    onClick={onClose}
+                    onClick={() => {
+                        onClose();
+                        impact('light');
+                    }}
                     className="p-2 backdrop-blur-[25px] bg-gradient-to-b from-[rgba(255,255,255,0.25)] to-[rgba(255,255,255,0)] rounded-full shadow-[0px_1px_2px_rgba(255,255,255,0.15)_inset] transition-all active:scale-95"
                 >
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -121,7 +129,10 @@ export function AvatarSlider({ selectedAvatar, onSelect, onClose }: AvatarSlider
 
                 {/* Select Button */}
                 <button
-                    onClick={() => onSelect(currentAvatar)}
+                    onClick={() => {
+                        onSelect(currentAvatar);
+                        notification('success');
+                    }}
                     className="w-full py-3 backdrop-blur-[25px] bg-gradient-to-b from-[rgba(255,255,255,0.25)] to-[rgba(255,255,255,0.1)] rounded-full shadow-[0px_1px_2px_rgba(255,255,255,0.15)_inset] text-white text-sm font-bold transition-all active:scale-95"
                 >
                     Выбрать

@@ -94,7 +94,7 @@ export async function generateAIResponse(
             "X-Title": "Passion Bot",
         },
         body: JSON.stringify({
-            model: "x-ai/grok-4-fast:free", // Or whatever model was used
+            model: "x-ai/grok-4.1-fast:free",
             messages: messages,
             max_tokens: 512,
             temperature: 0.9,

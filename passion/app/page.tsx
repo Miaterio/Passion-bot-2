@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useHaptic } from '../src/hooks/useHaptic';
 import { ChatInterface } from '../src/components/ChatInterface';
 import { AvatarSlider } from '../src/components/AvatarSlider';
 import { Avatar, AVATARS } from '../src/lib/bot/prompts';
@@ -69,6 +70,7 @@ export default function Page() {
   const [chatMode, setChatMode] = React.useState(false);
   const [selectedAvatar, setSelectedAvatar] = React.useState<Avatar>(AVATARS[0]);
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
+  const { impact, selection } = useHaptic();
 
   React.useEffect(() => {
     // Detect Android platform
@@ -79,6 +81,7 @@ export default function Page() {
 
   const handleAvatarSelect = (avatar: Avatar) => {
     setSelectedAvatar(avatar);
+    selection();
   };
 
   const handleBack = () => {
@@ -86,6 +89,7 @@ export default function Page() {
   };
 
   const toggleUserMenu = () => {
+    impact('light');
     setIsUserMenuOpen(!isUserMenuOpen);
   };
 
@@ -102,9 +106,9 @@ export default function Page() {
           style={{
             width: isUserMenuOpen ? '286px' : '100%',
             height: isUserMenuOpen ? '620px' : '100%',
-            marginBottom: isUserMenuOpen ? '280px' : '0px',
-            transition: 'all 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-            willChange: 'width, height, margin-bottom',
+            transform: isUserMenuOpen ? 'translateY(-280px)' : 'translateY(0)',
+            transition: 'width 600ms cubic-bezier(0.4, 0.0, 0.2, 1), height 600ms cubic-bezier(0.4, 0.0, 0.2, 1), transform 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
+            willChange: 'width, height, transform',
           }}
         >
           <img
@@ -118,9 +122,10 @@ export default function Page() {
         <div
           className="absolute left-0 w-full h-[120px] bg-gradient-to-t from-[#100024] to-transparent"
           style={{
-            bottom: isUserMenuOpen ? '280px' : '0px',
-            transition: 'bottom 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-            willChange: 'bottom',
+            bottom: 0,
+            transform: isUserMenuOpen ? 'translateY(-280px)' : 'translateY(0)',
+            transition: 'transform 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
+            willChange: 'transform',
           }}
         />
       </div>
@@ -150,10 +155,10 @@ export default function Page() {
                   pointerEvents: isUserMenuOpen ? 'none' : 'auto'
                 }}
               >
-                <Button>
+                <Button onClick={() => impact('light')}>
                   <BroomIcon />
                 </Button>
-                <Button>
+                <Button onClick={() => impact('light')}>
                   <FlashIcon />
                 </Button>
               </div>
@@ -183,13 +188,16 @@ export default function Page() {
                 pointerEvents: isUserMenuOpen ? 'none' : 'auto'
               }}
             >
-              <Button active={!isUserMenuOpen}>
+              <Button active={!isUserMenuOpen} onClick={() => impact('light')}>
                 <HomeIcon />
               </Button>
-              <Button>
+              <Button onClick={() => {
+                impact('light');
+                setChatMode(true);
+              }}>
                 <ToggleIcon />
               </Button>
-              <Button>
+              <Button onClick={() => impact('light')}>
                 <SettingIcon />
               </Button>
               <Button active={isUserMenuOpen} onClick={toggleUserMenu}>
