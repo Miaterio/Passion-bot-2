@@ -27,6 +27,7 @@ export const bot = new Bot<MyContext>(BOT_TOKEN);
 
 // Session Storage (File-based for local dev)
 const sessionDir = path.join(process.cwd(), "sessions");
+// @ts-ignore - FileAdapter constructor might vary by version
 const sessionStorage = new FileAdapter({ dir: sessionDir });
 
 bot.use(
@@ -41,6 +42,24 @@ bot.use(
         storage: sessionStorage,
     })
 );
+
+// --- Session Helpers for API ---
+export async function getUserSession(userId: number): Promise<SessionData> {
+    const key = userId.toString();
+    const session = (await sessionStorage.read(key)) as unknown as SessionData;
+    return session || {
+        avatar: null,
+        ageConfirmed: false,
+        messages: [],
+        botMessages: [],
+        userMessages: [],
+    };
+}
+
+export async function saveUserSession(userId: number, session: SessionData) {
+    const key = userId.toString();
+    await sessionStorage.write(key, session);
+}
 
 // --- Helper Functions ---
 
@@ -192,10 +211,32 @@ bot.callbackQuery(/^select_(.+)$/, async (ctx) => {
 });
 
 bot.command("clear", async (ctx) => {
+    const messagesToDelete = [
+        ...(ctx.session.botMessages || []),
+        ...(ctx.session.userMessages || [])
+    ];
+
+    // Delete messages in parallel (with error handling)
+    await Promise.all(messagesToDelete.map(async (msgId) => {
+        try {
+            await ctx.api.deleteMessage(ctx.chat.id, msgId);
+        } catch (e) {
+            // Ignore errors (e.g. message too old, already deleted)
+            console.warn(`Failed to delete message ${msgId}:`, e);
+        }
+    }));
+
+    // Clear session
     ctx.session.messages = [];
     ctx.session.botMessages = [];
     ctx.session.userMessages = [];
-    await ctx.reply("🗑️ История очищена!");
+
+    const sent = await ctx.reply("🗑️ История очищена!");
+
+    // Auto-delete confirmation after 3 seconds
+    setTimeout(() => {
+        ctx.api.deleteMessage(ctx.chat.id, sent.message_id).catch(() => { });
+    }, 3000);
 });
 
 bot.on("message:text", async (ctx) => {

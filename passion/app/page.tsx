@@ -2,9 +2,22 @@
 
 import React from 'react';
 import { useHaptic } from '../src/hooks/useHaptic';
+import { useLaunchParams } from '@tma.js/sdk-react';
 import { ChatInterface } from '../src/components/ChatInterface';
 import { AvatarSlider } from '../src/components/AvatarSlider';
 import { Avatar, AVATARS } from '../src/lib/bot/prompts';
+
+// ... (Icon components remain the same, skipping for brevity in this tool call if possible, but replace_file_content needs context. 
+// Actually, I can just replace the imports and the component body.
+// But I need to be careful not to delete the Icons if I don't include them.
+// I will target the imports and the Page component body separately or use a larger chunk if needed.
+// Let's try to target the imports first, then the component body.
+// Actually, I can do it in one go if I include the icons, but that's a lot of text.
+// I'll use multi_replace_file_content or just target the specific areas.
+// Let's use replace_file_content for the imports first.
+
+// Wait, I can't use multiple replace_file_content calls in parallel if they overlap or if I want to be safe.
+// I'll do imports first.
 
 // Icon Components using actual Vuesax Bold SVG paths
 const BroomIcon = ({ fill = "white" }: { fill?: string }) => (
@@ -70,7 +83,17 @@ export default function Page() {
   const [chatMode, setChatMode] = React.useState(false);
   const [selectedAvatar, setSelectedAvatar] = React.useState<Avatar>(AVATARS[0]);
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
-  const { impact, selection } = useHaptic();
+  const [chatKey, setChatKey] = React.useState(0); // Key to force ChatInterface remount
+  const { impact, selection, notification } = useHaptic();
+
+  // Safely retrieve launch params
+  let initDataRaw = '';
+  try {
+    const lp = useLaunchParams();
+    initDataRaw = lp.initDataRaw || '';
+  } catch (e) {
+    console.warn('Failed to get launch params:', e);
+  }
 
   React.useEffect(() => {
     // Detect Android platform
@@ -93,6 +116,31 @@ export default function Page() {
     setIsUserMenuOpen(!isUserMenuOpen);
   };
 
+  const handleClearHistory = async () => {
+    console.log("handleClearHistory called");
+    impact('medium');
+
+    // In dev, we might not have initData, but API handles fallback.
+    // So we proceed.
+    const query = initDataRaw ? `?initData=${encodeURIComponent(initDataRaw)}` : '';
+
+    try {
+      const res = await fetch(`/api/chat${query}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        notification('success');
+        // Force ChatInterface to remount with fresh state
+        setChatKey(prev => prev + 1);
+      } else {
+        notification('error');
+      }
+    } catch (e) {
+      console.error("Failed to clear history:", e);
+      notification('error');
+    }
+  };
+
   return (
     <div className="w-full h-screen relative overflow-hidden flex flex-col justify-center items-start bg-[#100024]">
       {/* Fixed Background Color */}
@@ -106,9 +154,14 @@ export default function Page() {
           style={{
             width: isUserMenuOpen ? '286px' : '100%',
             height: isUserMenuOpen ? '620px' : '100%',
-            transform: isUserMenuOpen ? 'translateY(-280px)' : 'translateY(0)',
-            transition: 'width 600ms cubic-bezier(0.4, 0.0, 0.2, 1), height 600ms cubic-bezier(0.4, 0.0, 0.2, 1), transform 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-            willChange: 'width, height, transform',
+            transform: chatMode
+              ? 'translateY(100px) scale(0.9)'
+              : isUserMenuOpen
+                ? 'translateY(-280px)'
+                : 'translateY(0)',
+            opacity: chatMode ? 0 : 1,
+            transition: 'all 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
+            willChange: 'width, height, transform, opacity',
           }}
         >
           <img
@@ -124,8 +177,9 @@ export default function Page() {
           style={{
             bottom: 0,
             transform: isUserMenuOpen ? 'translateY(-280px)' : 'translateY(0)',
-            transition: 'transform 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-            willChange: 'transform',
+            opacity: chatMode ? 0 : 1,
+            transition: 'transform 600ms cubic-bezier(0.4, 0.0, 0.2, 1), opacity 600ms',
+            willChange: 'transform, opacity',
           }}
         />
       </div>
@@ -155,7 +209,7 @@ export default function Page() {
                   pointerEvents: isUserMenuOpen ? 'none' : 'auto'
                 }}
               >
-                <Button onClick={() => impact('light')}>
+                <Button onClick={handleClearHistory}>
                   <BroomIcon />
                 </Button>
                 <Button onClick={() => impact('light')}>
@@ -207,7 +261,12 @@ export default function Page() {
           </>
         ) : (
           <div className="flex-1 h-full">
-            <ChatInterface avatar={selectedAvatar} onBack={handleBack} />
+            <ChatInterface
+              key={chatKey}
+              avatar={selectedAvatar}
+              onBack={handleBack}
+              initData={initDataRaw}
+            />
           </div>
         )}
       </div>
