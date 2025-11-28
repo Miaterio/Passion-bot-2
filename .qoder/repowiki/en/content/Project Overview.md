@@ -16,7 +16,22 @@
 - [theme-params/page.tsx](file://passion/src/app/theme-params/page.tsx)
 - [launch-params/page.tsx](file://passion/src/app/launch-params/page.tsx)
 - [init-data/page.tsx](file://passion/src/app/init-data/page.tsx)
+- [AvatarSlider.tsx](file://passion/src/components/AvatarSlider.tsx) - *Added avatar-based chat interface with multiple AI personas*
+- [AvatarSelection.tsx](file://passion/src/components/AvatarSelection.tsx) - *New component for AI persona selection*
+- [ChatInterface.tsx](file://passion/src/components/ChatInterface.tsx) - *Enhanced with message history and session storage*
+- [BounceEffect.tsx](file://passion/components/BounceEffect/BounceEffect.tsx) - *Custom overscroll bounce effect with RAF ID management*
+- [useHaptic.ts](file://passion/src/hooks/useHaptic.ts) - *Haptic feedback integration for Telegram Back Button*
+- [route.ts](file://passion/app/api/chat/route.ts) - *AI chat backend with session management*
 </cite>
+
+## Update Summary
+**Changes Made**   
+- Updated Key Features section to include new avatar-based chat interface with multiple AI personas
+- Added new section for Telegram Back Button integration and native navigation
+- Enhanced Development Environment Simulation section with BounceEffect implementation details
+- Expanded AI Chat Backend section with message history and session storage functionality
+- Updated Technology Stack to reflect new components and hooks
+- Added new diagrams for avatar selection and chat interaction flows
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -41,10 +56,12 @@ Passion-bot-2 is built using a modern technology stack that combines robust fram
 
 - **TypeScript**: Provides type safety and enhances code maintainability.
 - **Next.js**: Enables server-side rendering, routing, and seamless deployment workflows.
-- **@telegram-apps/sdk-react**: Facilitates interaction with Telegram's Mini App features such as theme parameters, launch data, and UI components.
+- **@telegram-apps/sdk-react**: Facilitates interaction with Telegram's Mini App features such as theme parameters, launch data, UI components, and haptic feedback.
 - **@tonconnect/ui-react**: Integrates TON blockchain wallet connectivity, allowing users to connect and interact with their TON wallets directly within the app.
 - **next-intl**: Implements internationalization support for multi-language applications.
 - **Tailwind CSS**: Offers utility-first styling for responsive and consistent design.
+- **React Hooks**: Custom hooks like `useHaptic` for Telegram-native interactions.
+- **BounceEffect**: Custom overscroll bounce implementation with RAF ID management.
 
 This combination ensures a scalable, maintainable, and user-friendly development experience.
 
@@ -89,18 +106,111 @@ The `/init-data` page illustrates how to access and parse initialization data, i
 ### Multi-Language Support
 Built-in internationalization allows the app to support multiple languages (currently English and Russian). Language preferences are automatically detected from the user's Telegram profile and applied dynamically.
 
+### Avatar-Based Chat Interface with Multiple AI Personas
+The application now features an advanced avatar-based chat interface that allows users to select from multiple AI personas. Each persona has unique characteristics, prompts, and response styles, creating a personalized conversational experience.
+
+The `AvatarSlider` component provides an interactive carousel for browsing and selecting AI avatars, with swipe gestures and pagination indicators. Users can explore different personas through a dedicated selection interface before engaging in conversation.
+
+```mermaid
+graph TB
+A[User Opens App] --> B{Select Avatar}
+B --> C[AvatarSelection]
+C --> D[AvatarSlider]
+D --> E[ChatInterface]
+E --> F[Selected AI Persona]
+```
+
 **Section sources**
-- [page.tsx](file://passion/src/app/page.tsx#L1-L64)
-- [ton-connect/page.tsx](file://passion/src/app/ton-connect/page.tsx#L1-L108)
-- [theme-params/page.tsx](file://passion/src/app/theme-params/page.tsx#L1-L27)
-- [launch-params/page.tsx](file://passion/src/app/launch-params/page.tsx#L1-L34)
-- [init-data/page.tsx](file://passion/src/app/init-data/page.tsx#L1-L97)
+- [AvatarSelection.tsx](file://passion/src/components/AvatarSelection.tsx#L1-L31)
+- [AvatarSlider.tsx](file://passion/src/components/AvatarSlider.tsx#L1-L144)
+
+### Custom Overscroll Bounce Effect with flushSync and RAF ID Management
+The application implements a custom overscroll bounce effect that simulates native iOS rubber-band scrolling behavior. This effect is achieved through precise touch event handling and animation frame management.
+
+The `BounceEffect` component uses `requestAnimationFrame` (RAF) for smooth 60fps animations and proper RAF ID management to prevent memory leaks and ensure clean cleanup. The implementation leverages `flushSync` to synchronize state updates during the bounce animation, providing immediate visual feedback.
+
+Key technical aspects:
+- Direct CSS variable manipulation for instant visual updates
+- RAF ID stored in useRef for cross-handler access
+- Proper cleanup in useEffect cleanup function
+- Use of flushSync for synchronous state updates
+- Resistance-based pull distance calculation
+
+```mermaid
+sequenceDiagram
+participant User
+participant TouchEvent
+participant RAF
+participant CSS
+User->>TouchEvent : Touch Start
+TouchEvent->>RAF : Initialize rafId
+User->>TouchEvent : Touch Move
+TouchEvent->>CSS : Update --pull-distance
+CSS->>User : Visual bounce effect
+User->>TouchEvent : Touch End
+TouchEvent->>RAF : Cancel rafId
+RAF->>CSS : Reset transform
+```
+
+**Diagram sources**
+- [BounceEffect.tsx](file://passion/components/BounceEffect/BounceEffect.tsx#L1-L238)
+
+**Section sources**
+- [BounceEffect.tsx](file://passion/components/BounceEffect/BounceEffect.tsx#L1-L238)
+
+### Telegram Back Button Integration for Native Navigation
+The application integrates with Telegram's native Back Button for seamless navigation. The back button is automatically displayed when users enter the chat interface and returns them to the avatar selection screen.
+
+The integration uses Telegram's SDK to mount the back button component and handle click events, providing a native app-like experience. Haptic feedback is triggered on button interactions using the `useHaptic` hook for enhanced user experience.
+
+**Section sources**
+- [ChatInterface.tsx](file://passion/src/components/ChatInterface.tsx#L1-L274)
+- [useHaptic.ts](file://passion/src/hooks/useHaptic.ts#L1-L65)
+
+### AI Chat Backend with Message History Management and Session Storage
+The application features a robust AI chat backend with comprehensive message history management and session storage capabilities. The backend handles conversation persistence, message retrieval, and session state across user interactions.
+
+Key features:
+- User session management with unique user IDs
+- Message history storage and retrieval
+- Session persistence across app restarts
+- Message splitting for long responses
+- Typing indicators and response delays
+- Error handling and fallback responses
+
+The backend is implemented through API routes that handle GET (retrieve history), POST (send message), and DELETE (clear history) operations, with proper authentication and error handling.
+
+```mermaid
+sequenceDiagram
+participant Frontend
+participant API
+participant SessionStorage
+Frontend->>API : GET /api/chat
+API->>SessionStorage : Retrieve user session
+SessionStorage->>API : Return message history
+API->>Frontend : JSON response with messages
+Frontend->>API : POST /api/chat
+API->>SessionStorage : Load session
+API->>AI : Generate response
+AI->>API : Return response
+API->>SessionStorage : Save updated session
+API->>Frontend : Return response
+```
+
+**Diagram sources**
+- [route.ts](file://passion/app/api/chat/route.ts#L1-L139)
+
+**Section sources**
+- [ChatInterface.tsx](file://passion/src/components/ChatInterface.tsx#L1-L274)
+- [route.ts](file://passion/app/api/chat/route.ts#L1-L139)
 
 ## Development Environment Simulation
 
 To facilitate development outside the Telegram app, the project uses `mockEnv.ts` to simulate the Telegram environment. This file intercepts requests for theme, viewport, and safe area data, providing mock responses that mimic real Telegram behavior. The simulation is only active during development mode (`NODE_ENV === 'development'`) and is automatically excluded in production builds.
 
 The `instrumentation-client.ts` file orchestrates this process by calling `mockEnv()` before initializing the SDK. This ensures that developers can test the app in a browser without requiring constant deployment to Telegram.
+
+Additionally, the custom `BounceEffect` component enhances the development experience by simulating native overscroll behavior, allowing developers to test the bounce effect without needing a physical device.
 
 ```mermaid
 sequenceDiagram
@@ -119,6 +229,7 @@ SDK->>Browser : Initialize Components
 **Section sources**
 - [mockEnv.ts](file://passion/src/mockEnv.ts#L1-L82)
 - [instrumentation-client.ts](file://passion/src/instrumentation-client.ts#L1-L26)
+- [BounceEffect.tsx](file://passion/components/BounceEffect/BounceEffect.tsx#L1-L238)
 
 ## Core Initialization Process
 
@@ -175,6 +286,10 @@ This template is ideal for developers building Telegram Mini Apps that require:
 - Dynamic theming that matches the user's Telegram interface
 - Multi-language support for global audiences
 - Debugging tools and development workflows outside Telegram
+- Advanced chat interfaces with AI personas and message history
+- Native-like navigation with Telegram Back Button integration
+- Custom UI effects like overscroll bounce with proper performance optimization
+- Session management and persistent user data storage
 
 By providing a ready-to-use foundation, Passion-bot-2 reduces boilerplate code and accelerates time-to-market for new Mini Apps.
 

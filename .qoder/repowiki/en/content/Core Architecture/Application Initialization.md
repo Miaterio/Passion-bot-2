@@ -2,19 +2,20 @@
 
 <cite>
 **Referenced Files in This Document**   
-- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx) - *Updated with enhanced diagnostic logging*
-- [layout.tsx](file://passion/src/app/layout.tsx) - *Added web app meta tags*
-- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx) - *Enhanced with diagnostic logging*
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx) - *Updated with enhanced diagnostic logging and timeout protection*
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx) - *Enhanced with signal-based reactive state management*
+- [layout.tsx](file://passion/app/layout.tsx) - *Added web app meta tags and viewport configuration*
 </cite>
 
 ## Update Summary
 **Changes Made**   
-- Updated **TMAInitializer Component** section with enhanced diagnostic logging details
-- Added information about delays after viewport.expand and requestFullscreen calls
-- Included logging of final viewport state with isExpanded, isFullscreen, contentSafeAreaInsets, and safeAreaInsets values
-- Added documentation for meta tags apple-mobile-web-app-capable and mobile-web-app-capable in root layout
-- Updated code examples to reflect improved diagnostic capabilities
-- Enhanced troubleshooting guidance with final state verification
+- Updated **TMAInitializer Component** section with new initialization sequence, timeout protection for viewport.mount(), and guaranteed miniApp.ready() call
+- Added documentation for immediate iOS safe area fallback implementation
+- Enhanced details on manual binding of safe area CSS variables in TMAInitializer
+- Updated **SafeAreaProvider and Dynamic Safe Area Management** section to reflect signal-based reactive state management
+- Added information about event listeners and polling for safe area updates
+- Updated code examples to reflect current implementation with comprehensive error handling
+- Enhanced troubleshooting guidance with platform-specific diagnostics
 
 ## Table of Contents
 1. [Initialization Overview](#initialization-overview)
@@ -38,8 +39,7 @@ The initialization sequence follows a structured approach that ensures proper se
 The initialization process begins when the application loads and is designed to handle various configuration options that affect debugging, development tools, and platform-specific behaviors. The function accepts an options object containing three key properties: `debug`, `eruda`, and `mockForMacOS`, which control different aspects of the initialization behavior.
 
 **Section sources**
-- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L22-L187) - *Updated with enhanced diagnostic logging*
-- [init.ts](file://passion/src/core/init.ts#L20-L81) - *Updated for TMA SDK v3.x*
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L21-L313) - *Updated with enhanced diagnostic logging and timeout protection*
 
 ## TMAInitializer Component
 
@@ -49,8 +49,8 @@ The component follows a specific initialization sequence:
 1. Environment detection to verify the application is running within a Telegram context
 2. Mounting of core SDK components in the correct order
 3. Binding of CSS variables for theme and viewport management
-4. Requesting expanded viewport and fullscreen mode with diagnostic delays
-5. Logging final viewport state including safe area insets
+4. Manual binding of safe area CSS variables with platform-specific fallbacks
+5. Requesting expanded viewport and fullscreen mode
 6. Signaling application readiness to Telegram
 
 ```typescript
@@ -73,27 +73,47 @@ export function TMAInitializer() {
 
         console.log('[TMAInitializer] Starting initialization...');
 
+        // CRITICAL: Set immediate safe area vars for iOS to prevent initial overlap
+        // We don't wait for the SDK to load for this fallback
+        const platform = window.Telegram?.WebApp?.platform || 'unknown';
+        const isIOS = platform === 'ios' ||
+          (typeof window !== 'undefined' && /iPhone|iPad|iPod/.test(window.navigator.userAgent));
+
+        if (isIOS) {
+          const root = document.documentElement;
+          // Default to 88px (header + notch) for iOS
+          const defaultSafeTop = '88px';
+          root.style.setProperty('--tg-content-safe-area-inset-top', defaultSafeTop);
+          root.style.setProperty('--tg-viewport-content-safe-area-inset-top', defaultSafeTop);
+          console.log('[TMAInitializer] Applied immediate iOS safe area fallback:', defaultSafeTop);
+        }
+
         // 1. Mount miniApp
         try {
           if (miniApp.mount && typeof miniApp.mount === 'function') {
             miniApp.mount();
             console.log('[TMAInitializer] miniApp mounted');
+          } else {
+            console.warn('[TMAInitializer] miniApp.mount not available');
           }
         } catch (error) {
           console.error('[TMAInitializer] miniApp mount failed:', error);
         }
 
-        // 2. Mount themeParams
+        // 2. Mount themeParams (synchronous despite name in v3.x)
         try {
           if (themeParams.mount && typeof themeParams.mount === 'function') {
             themeParams.mount();
             console.log('[TMAInitializer] themeParams mounted');
+          } else {
+            console.warn('[TMAInitializer] themeParams.mount not available');
           }
         } catch (error) {
           console.error('[TMAInitializer] themeParams mount failed:', error);
         }
 
-        // 3. Mount viewport asynchronously with timeout protection
+        // 3. Mount viewport asynchronously with timeout protection (5 seconds)
+        // This prevents hanging on macOS Telegram and other edge cases
         let viewportMounted = false;
         try {
           if (viewport.mount && typeof viewport.mount === 'function') {
@@ -105,66 +125,205 @@ export function TMAInitializer() {
             await Promise.race([viewportMountPromise, timeoutPromise]);
             viewportMounted = true;
             console.log('[TMAInitializer] viewport mounted successfully');
+          } else {
+            console.warn('[TMAInitializer] viewport.mount not available');
           }
         } catch (error) {
           console.warn('[TMAInitializer] viewport mount failed or timeout:', error);
+          // Continue execution - SafeAreaProvider will handle fallback values
         }
 
-        // 4. Bind CSS variables for all components
+        // 4. Bind CSS variables for viewport dimensions
+        // IMPORTANT: This ONLY creates --tg-viewport-height, --tg-viewport-width, --tg-viewport-stable-height
+        // It does NOT create safe area inset variables
         if (viewportMounted && viewport.isMounted()) {
           try {
-            viewport.bindCssVars();
-            console.log('[TMAInitializer] viewport CSS vars bound');
+            if (viewport.bindCssVars && typeof viewport.bindCssVars === 'function') {
+              viewport.bindCssVars();
+              console.log('[TMAInitializer] viewport CSS vars bound');
+            }
           } catch (error) {
             console.error('[TMAInitializer] viewport.bindCssVars failed:', error);
           }
         }
 
+        // 5. Bind CSS variables for miniApp
         try {
-          miniApp.bindCssVars();
-          console.log('[TMAInitializer] miniApp CSS vars bound');
+          if (miniApp.bindCssVars && typeof miniApp.bindCssVars === 'function') {
+            miniApp.bindCssVars();
+            console.log('[TMAInitializer] miniApp CSS vars bound');
+          }
         } catch (error) {
           console.error('[TMAInitializer] miniApp.bindCssVars failed:', error);
         }
 
+        // 6. Bind CSS variables for themeParams
         try {
-          themeParams.bindCssVars();
-          console.log('[TMAInitializer] themeParams CSS vars bound');
+          if (themeParams.bindCssVars && typeof themeParams.bindCssVars === 'function') {
+            themeParams.bindCssVars();
+            console.log('[TMAInitializer] themeParams CSS vars bound');
+          }
         } catch (error) {
           console.error('[TMAInitializer] themeParams.bindCssVars failed:', error);
         }
 
-        // 5. Request expanded viewport and fullscreen with diagnostic delays
+        // 6.5 Bind Safe Area CSS variables manually
+        // This ensures we have --tg-content-safe-area-inset-* available in CSS
+        try {
+          const setSafeAreaCssVars = () => {
+            const contentInsets = viewport.contentSafeAreaInsets();
+            const safeInsets = viewport.safeAreaInsets();
+            const isExpanded = viewport.isExpanded();
+            const isFullscreen = viewport.isFullscreen();
+
+            console.log('[TMAInitializer] Setting Safe Area Vars:', {
+              contentInsets,
+              safeInsets,
+              isExpanded,
+              isFullscreen
+            });
+
+            const root = document.documentElement;
+
+            // Platform detection for fallback
+            // Use native Telegram platform detection or fallback to user agent
+            const platform = window.Telegram?.WebApp?.platform || 'unknown';
+            const isIOS = platform === 'ios' ||
+              (typeof window !== 'undefined' && /iPhone|iPad|iPod/.test(window.navigator.userAgent));
+
+            console.log('[TMAInitializer] Platform Check:', { isIOS, platform, userAgent: window.navigator.userAgent });
+
+            // Set content safe area insets
+            if (contentInsets) {
+              // CRITICAL FALLBACK: On iOS, we need to handle both notch and header.
+              // If contentInsets.top is 0, it's definitely wrong.
+              // If isFullscreen is false (default), we expect a header (~88px).
+              // If isFullscreen is true, we expect at least the notch (~44px).
+              let fallbackTop = 0;
+              if (isIOS) {
+                fallbackTop = isFullscreen ? 44 : 88;
+              }
+
+              const safeTop = (contentInsets.top === 0 && isIOS)
+                ? fallbackTop
+                : Math.max(contentInsets.top, isIOS ? 44 : 0);
+
+              console.log('[TMAInitializer] Content Insets Logic:', {
+                rawTop: contentInsets.top,
+                appliedTop: safeTop,
+                isIOS,
+                fallbackApplied: safeTop !== contentInsets.top
+              });
+
+              // Set custom variables
+              root.style.setProperty('--tg-content-safe-area-inset-top', `${safeTop}px`);
+              root.style.setProperty('--tg-content-safe-area-inset-left', `${contentInsets.left}px`);
+              root.style.setProperty('--tg-content-safe-area-inset-right', `${contentInsets.right}px`);
+              root.style.setProperty('--tg-content-safe-area-inset-bottom', `${contentInsets.bottom}px`);
+
+              // Set standard SDK variables (for compatibility with UI kits)
+              root.style.setProperty('--tg-viewport-content-safe-area-inset-top', `${safeTop}px`);
+              root.style.setProperty('--tg-viewport-content-safe-area-inset-left', `${contentInsets.left}px`);
+              root.style.setProperty('--tg-viewport-content-safe-area-inset-right', `${contentInsets.right}px`);
+              root.style.setProperty('--tg-viewport-content-safe-area-inset-bottom', `${contentInsets.bottom}px`);
+
+              if (safeTop !== contentInsets.top) {
+                console.warn('[TMAInitializer] Applied iOS safe area fallback:', { original: contentInsets.top, new: safeTop });
+              }
+            } else {
+              console.warn('[TMAInitializer] contentSafeAreaInsets is undefined');
+              // If contentInsets is undefined, we also apply fallback for iOS
+              if (isIOS) {
+                const fallback = '44px';
+                root.style.setProperty('--tg-content-safe-area-inset-top', fallback);
+                root.style.setProperty('--tg-viewport-content-safe-area-inset-top', fallback);
+                console.warn('[TMAInitializer] Applied iOS safe area fallback (undefined insets)');
+              } else {
+                // Reset if undefined and not iOS/fullscreen to allow fallback
+                root.style.removeProperty('--tg-content-safe-area-inset-top');
+                root.style.removeProperty('--tg-viewport-content-safe-area-inset-top');
+              }
+              root.style.removeProperty('--tg-content-safe-area-inset-bottom');
+              root.style.removeProperty('--tg-viewport-content-safe-area-inset-bottom');
+              root.style.removeProperty('--tg-content-safe-area-inset-left');
+              root.style.removeProperty('--tg-viewport-content-safe-area-inset-left');
+              root.style.removeProperty('--tg-content-safe-area-inset-right');
+              root.style.removeProperty('--tg-viewport-content-safe-area-inset-right');
+            }
+
+            // Set standard safe area insets (fallback)
+            if (safeInsets) {
+              console.log('[TMAInitializer] Standard Safe Insets:', safeInsets);
+              // Custom
+              root.style.setProperty('--tg-safe-area-inset-top', `${safeInsets.top}px`);
+              root.style.setProperty('--tg-safe-area-inset-left', `${safeInsets.left}px`);
+              root.style.setProperty('--tg-safe-area-inset-right', `${safeInsets.right}px`);
+              root.style.setProperty('--tg-safe-area-inset-bottom', `${safeInsets.bottom}px`);
+
+              // Standard SDK
+              root.style.setProperty('--tg-viewport-safe-area-inset-top', `${safeInsets.top}px`);
+              root.style.setProperty('--tg-viewport-safe-area-inset-left', `${safeInsets.left}px`);
+              root.style.setProperty('--tg-viewport-safe-area-inset-right', `${safeInsets.right}px`);
+              root.style.setProperty('--tg-viewport-safe-area-inset-bottom', `${safeInsets.bottom}px`);
+            }
+          };
+
+          // Set initial values
+          if (viewportMounted && viewport.isMounted()) {
+            setSafeAreaCssVars();
+
+            // CRITICAL: Listen to all relevant events
+            // The SDK might not expose a clean .on() method for everything on the viewport object directly 
+            // depending on the version, but we can try standard window resize and specific SDK signals if available.
+
+            window.addEventListener('resize', setSafeAreaCssVars);
+
+            // If the SDK supports event listening on the viewport object (v3+ usually does via .on)
+            // We try to bind to 'change' or similar if it exists, otherwise we poll.
+            // Since we are in a React component, we can use a polling interval as a safety net
+            // because safe area changes might happen during animations (keyboard, expansion).
+
+            const intervalId = setInterval(setSafeAreaCssVars, 1000);
+
+            // Also try to hook into the SDK's internal event system if accessible
+            // @ts-ignore - attempting to access potential event emitter
+            if (viewport.on) {
+              // @ts-ignore
+              viewport.on('change', setSafeAreaCssVars);
+            }
+
+            // Cleanup
+            return () => {
+              window.removeEventListener('resize', setSafeAreaCssVars);
+              clearInterval(intervalId);
+              // @ts-ignore
+              if (viewport.off) viewport.off('change', setSafeAreaCssVars);
+            };
+          }
+        } catch (error) {
+          console.error('[TMAInitializer] Failed to bind safe area CSS vars:', error);
+        }
+
+        // 7. Request expanded viewport for better UX
         if (viewportMounted && viewport.isMounted()) {
           try {
-            viewport.expand();
-            console.log('[TMAInitializer] viewport expanded');
-            console.log('[TMAInitializer] isExpanded:', viewport.isExpanded());
+            if (viewport.expand && typeof viewport.expand === 'function') {
+              viewport.expand();
+              console.log('[TMAInitializer] viewport expanded');
+            }
           } catch (error) {
             console.warn('[TMAInitializer] viewport.expand failed:', error);
           }
 
-          // Wait for expand to complete
-          await new Promise(resolve => setTimeout(resolve, 100));
-
+          // 8. Optionally request fullscreen (uncomment if needed)
           try {
-            await viewport.requestFullscreen();
-            console.log('[TMAInitializer] fullscreen requested');
-            console.log('[TMAInitializer] isFullscreen:', viewport.isFullscreen?.());
+            if (viewport.requestFullscreen && typeof viewport.requestFullscreen === 'function') {
+              await viewport.requestFullscreen();
+              console.log('[TMAInitializer] fullscreen requested');
+            }
           } catch (error) {
             console.warn('[TMAInitializer] fullscreen request failed:', error);
           }
-
-          // Wait for fullscreen to settle
-          await new Promise(resolve => setTimeout(resolve, 100));
-
-          // Log final viewport state for diagnostics
-          console.log('[TMAInitializer] Final viewport state:', {
-            isExpanded: viewport.isExpanded?.(),
-            isFullscreen: viewport.isFullscreen?.(),
-            contentSafeAreaInsets: viewport.contentSafeAreaInsets?.(),
-            safeAreaInsets: viewport.safeAreaInsets?.(),
-          });
         }
 
         setInitialized(true);
@@ -172,9 +331,10 @@ export function TMAInitializer() {
 
       } catch (error) {
         console.error('[TMAInitializer] Initialization failed:', error);
-        setInitialized(true);
+        setInitialized(true); // Set to true anyway to prevent infinite loading
       } finally {
         // CRITICAL: Signal to Telegram that app is ready
+        // This must be called even if initialization fails to remove loading screen
         try {
           if (miniApp.ready && typeof miniApp.ready === 'function') {
             miniApp.ready();
@@ -189,6 +349,7 @@ export function TMAInitializer() {
     initializeTMA();
   }, []);
 
+  // This component doesn't render anything
   return null;
 }
 ```
@@ -198,78 +359,125 @@ The component implements several critical behaviors:
 - **Error resilience**: Failed component mounting does not halt the entire initialization process
 - **Always signal ready**: The `miniApp.ready()` call is made in the `finally` block to ensure the loading screen is removed even if initialization fails
 - **Conditional execution**: All operations are wrapped in availability checks to prevent errors on platforms where certain features are not supported
-- **Enhanced diagnostics**: Added delays after viewport.expand and requestFullscreen calls, and comprehensive logging of final viewport state
+- **Enhanced diagnostics**: Comprehensive logging of initialization steps and platform detection
+- **Immediate iOS safe area fallback**: Applies default safe area values for iOS immediately to prevent content overlap during initialization
+- **Manual safe area CSS variable binding**: Since `viewport.bindCssVars()` does not create safe area variables, they are manually bound with platform-specific fallbacks
+- **Event listeners and polling**: Uses both event listeners and polling to ensure safe area variables are updated during viewport changes
 
 **Section sources**
-- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L22-L187) - *Updated with enhanced diagnostic logging*
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L21-L313) - *Updated with enhanced diagnostic logging and timeout protection*
 
 ## SafeAreaProvider and Dynamic Safe Area Management
 
-The `SafeAreaProvider` component provides dynamic safe area management using the `viewport.contentSafeAreaInsets()` method with a comprehensive fallback strategy. This component ensures that content remains within visible boundaries by applying safe area insets as padding, addressing the limitations of the `viewport.bindCssVars()` method which does not create safe area CSS variables.
+The `SafeAreaProvider` component provides dynamic safe area management using signals from @tma.js/sdk-react for reactive state management. This component ensures that content remains within visible boundaries by applying safe area insets as CSS variables, addressing the limitations of the `viewport.bindCssVars()` method which does not create safe area CSS variables.
 
-The component implements a multi-layered approach to safe area management:
-1. Primary method: `viewport.contentSafeAreaInsets()` (Bot API 8.0+)
-2. Fallback: `viewport.safeAreaInsets()` (older versions)
-3. Ultimate fallback: zero insets for unsupported environments
+The component implements a signal-based approach to safe area management:
+1. Consumes `viewport.contentSafeAreaInsets` and `viewport.safeAreaInsets` signals directly
+2. Applies theme parameters, viewport properties, and safe area insets as CSS variables
+3. Reactively updates CSS variables when signal values change
 
 ```typescript
 'use client';
 
-import { type ReactNode, useEffect, useState } from 'react';
-import { viewport, useSignal } from '@tma.js/sdk-react';
+import { useSignal } from '@tma.js/sdk-react';
+import { useEffect } from 'react';
 
-interface SafeAreaInsets {
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-}
+export function SafeAreaProvider({ children }) {
+  // Use useSignal to reactively track SDK values
+  const theme = useSignal(themeParams.state);
+  const vp = useSignal(viewport.state);
+  // Track safe area insets reactively
+  const safeAreaInsets = useSignal(viewport.safeAreaInsets);
+  const contentSafeAreaInsets = useSignal(viewport.contentSafeAreaInsets);
 
-interface SafeAreaProviderProps {
-  children: ReactNode;
-}
-
-export function SafeAreaProvider({ children }: SafeAreaProviderProps) {
-  const contentInsets = useSignal(viewport.contentSafeAreaInsets);
-  const fallbackInsets = useSignal(viewport.safeAreaInsets);
-  const isExpanded = useSignal(viewport.isExpanded);
-
-  const insets: SafeAreaInsets = {
-    top: Math.max(contentInsets?.top ?? 0, fallbackInsets?.top ?? 0),
-    bottom: Math.max(contentInsets?.bottom ?? 0, fallbackInsets?.bottom ?? 0),
-    left: Math.max(contentInsets?.left ?? 0, fallbackInsets?.left ?? 0),
-    right: Math.max(contentInsets?.right ?? 0, fallbackInsets?.right ?? 0),
-  };
-
+  // Apply Telegram theme colors to CSS variables
   useEffect(() => {
-    console.log('[SafeAreaProvider] Full diagnostic:', {
-      contentInsets,
-      fallbackInsets,
-      isExpanded,
-      usingContentInsets: !!contentInsets,
-      insetsAreSame: contentInsets && fallbackInsets && 
-        contentInsets.top === fallbackInsets.top && 
-        contentInsets.bottom === fallbackInsets.bottom,
-    });
-  }, [contentInsets, fallbackInsets, isExpanded, insets]);
+    if (!theme) return;
 
-  const telegramUIBottomPadding = 8;
+    try {
+      const root = document.documentElement;
 
-  return (
-    <div
-      className="safe-area-container"
-      style={{
-        position: 'absolute',
-        top: `${insets.top}px`,
-        bottom: `${insets.bottom}px`,
-        left: `${insets.left}px`,
-        right: `${insets.right}px`,
-        paddingBottom: `${telegramUIBottomPadding}px`,
-      }}
-    >
-      {children}
-    </div>
-  );
+      // Set all Telegram theme colors as CSS custom properties
+      Object.entries(theme).forEach(([key, value]) => {
+        if (value) {
+          // Convert snake_case to kebab-case for CSS
+          const cssVarName = `--tg-theme-${key.replace(/_/g, '-')}`;
+          root.style.setProperty(cssVarName, value);
+        }
+      });
+
+      console.log('✅ Telegram theme applied:', theme);
+    } catch (error) {
+      console.warn('⚠️ Error applying theme:', error);
+    }
+  }, [theme]);
+
+  // Handle content safe area insets (reactively via useSignal)
+  useEffect(() => {
+    if (!contentSafeAreaInsets) {
+      console.warn('⚠️ Content safe area insets not available');
+      return;
+    }
+
+    try {
+      const root = document.documentElement;
+
+      // Set content safe area CSS variables
+      root.style.setProperty('--tg-content-safe-area-inset-top', `${contentSafeAreaInsets.top || 0}px`);
+      root.style.setProperty('--tg-content-safe-area-inset-bottom', `${contentSafeAreaInsets.bottom || 0}px`);
+      root.style.setProperty('--tg-content-safe-area-inset-left', `${contentSafeAreaInsets.left || 0}px`);
+      root.style.setProperty('--tg-content-safe-area-inset-right', `${contentSafeAreaInsets.right || 0}px`);
+
+      console.log('✅ Content safe area updated:', contentSafeAreaInsets);
+    } catch (error) {
+      console.warn('⚠️ Error updating content safe area:', error);
+    }
+  }, [contentSafeAreaInsets]);
+
+  // Handle device safe area insets (reactively via useSignal)
+  useEffect(() => {
+    if (!safeAreaInsets) {
+      console.warn('⚠️ Safe area insets not available');
+      return;
+    }
+
+    try {
+      const root = document.documentElement;
+
+      // Set device safe area CSS variables
+      root.style.setProperty('--tg-safe-area-inset-top', `${safeAreaInsets.top || 0}px`);
+      root.style.setProperty('--tg-safe-area-inset-bottom', `${safeAreaInsets.bottom || 0}px`);
+      root.style.setProperty('--tg-safe-area-inset-left', `${safeAreaInsets.left || 0}px`);
+      root.style.setProperty('--tg-safe-area-inset-right', `${safeAreaInsets.right || 0}px`);
+
+      console.log('✅ Safe area insets updated:', safeAreaInsets);
+    } catch (error) {
+      console.warn('⚠️ Error updating safe area insets:', error);
+    }
+  }, [safeAreaInsets]);
+
+  // Handle viewport properties
+  useEffect(() => {
+    if (!vp) return;
+
+    try {
+      const root = document.documentElement;
+
+      // Set viewport height variables
+      root.style.setProperty('--tg-viewport-height', `${vp.height || 0}px`);
+      root.style.setProperty('--tg-viewport-stable-height', `${vp.stableHeight || 0}px`);
+
+      console.log('✅ Viewport info updated:', {
+        height: vp.height,
+        stableHeight: vp.stableHeight,
+        isExpanded: vp.isExpanded,
+      });
+    } catch (error) {
+      console.warn('⚠️ Error updating viewport info:', error);
+    }
+  }, [vp]);
+
+  return <>{children}</>;
 }
 ```
 
@@ -278,7 +486,7 @@ Key features of the `SafeAreaProvider`:
 - **Memory leak prevention**: Properly cleans up subscriptions in the useEffect cleanup function
 - **Type safety**: Fully typed with TypeScript interfaces
 - **Graceful degradation**: Provides fallback values when safe area information is unavailable
-- **Inline styling**: Applies padding through inline styles for immediate effect
+- **CSS variable binding**: Applies safe area insets as CSS variables for use in stylesheets
 - **Diagnostic logging**: Comprehensive logging of safe area state for troubleshooting
 
 The component should be used as a wrapper around the application's main content, typically in the root layout:
@@ -308,7 +516,7 @@ export default function RootLayout({
 ```
 
 **Section sources**
-- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L25-L92) - *Enhanced with diagnostic logging*
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L20-L116) - *Enhanced with signal-based reactive state management*
 
 ## SDK Setup and Configuration
 
@@ -328,11 +536,10 @@ SDK-->>App : SDK ready
 ```
 
 **Diagram sources**
-- [init.ts](file://passion/src/core/init.ts#L37-L37)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L33-L33)
 
 **Section sources**
-- [init.ts](file://passion/src/core/init.ts#L37-L37)
-- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L36-L36)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L33-L33)
 
 ## Debug and Development Tools
 
@@ -360,10 +567,10 @@ ContinueInit([Continue initialization])
 ```
 
 **Diagram sources**
-- [init.ts](file://passion/src/core/init.ts#L39-L49)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L39-L49)
 
 **Section sources**
-- [init.ts](file://passion/src/core/init.ts#L39-L49)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L39-L49)
 
 ## Component Mounting Process
 
@@ -390,11 +597,10 @@ H --> I[Initialization complete]
 ```
 
 **Diagram sources**
-- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L37-L75)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L50-L89)
 
 **Section sources**
-- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L37-L75)
-- [init.ts](file://passion/src/core/init.ts#L74-L104)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L50-L89)
 
 ## Theme and Viewport Management
 
@@ -415,11 +621,10 @@ F --> H[Responsive Layout]
 ```
 
 **Diagram sources**
-- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L96-L110)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L109-L124)
 
 **Section sources**
-- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L96-L110)
-- [init.ts](file://passion/src/core/init.ts#L79-L96)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L109-L124)
 
 ## Launch Parameters and Platform Detection
 
@@ -430,8 +635,7 @@ The retrieved launch parameters are used throughout the application, particularl
 Platform detection is essential for providing a native-like experience, as it allows the application to adapt its interface to match the conventions of the user's device, whether it's iOS, Android, or desktop.
 
 **Section sources**
-- [init.ts](file://passion/src/core/init.ts#L7-L7)
-- [Root.tsx](file://passion/components/Root/Root.tsx#L21-L37)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L148-L151)
 
 ## State Synchronization with Signals
 
@@ -472,12 +676,12 @@ LaunchParamsSignal --> PlatformSpecificUI : determines styling
 ```
 
 **Diagram sources**
-- [Root.tsx](file://passion/components/Root/Root.tsx#L23-L24)
-- [init-data/page.tsx](file://passion/app/init-data/page.tsx#L23-L24)
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L22-L26)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L22-L26)
 
 **Section sources**
-- [Root.tsx](file://passion/components/Root/Root.tsx#L23-L29)
-- [init-data/page.tsx](file://passion/app/init-data/page.tsx#L23-L24)
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L22-L26)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L22-L26)
 
 ## Error Handling and Troubleshooting
 
@@ -498,10 +702,9 @@ Common issues that may occur during initialization include:
 The ErrorBoundary component provides a safety net for unhandled exceptions, catching errors and displaying a user-friendly error page while logging the details for debugging.
 
 **Section sources**
-- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L140-L154)
-- [init.ts](file://passion/src/core/init.ts#L140-L143)
-- [Root.tsx](file://passion/components/Root/Root.tsx#L45-L57)
-- [ErrorBoundary.tsx](file://passion/components/ErrorBoundary.tsx#L15-L38)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L291-L304)
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L45-L47)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L291-L304)
 
 ## Performance Considerations
 
@@ -520,6 +723,6 @@ The initialization process incorporates several performance optimizations to ens
 These performance considerations are particularly important in the context of Telegram Mini Apps, where users expect near-instant loading and smooth interactions similar to native applications.
 
 **Section sources**
-- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L60-L75)
-- [Root.tsx](file://passion/components/Root/Root.tsx#L49-L52)
-- [init-data/page.tsx](file://passion/app/init-data/page.tsx#L26-L44)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L74-L89)
+- [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L51-L55)
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L245-L246)

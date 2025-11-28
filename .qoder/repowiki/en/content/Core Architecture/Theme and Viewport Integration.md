@@ -2,19 +2,20 @@
 
 <cite>
 **Referenced Files in This Document**   
-- [init.ts](file://passion/src/core/init.ts) - *Updated for @tma.js/sdk v3.x migration*
-- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx) - *New initialization component with timeout protection*
+- [init.ts](file://passion/src/core/init.ts) - *Updated for @tma.js/sdk v3.x migration with individual component mounting*
+- [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx) - *New initialization component with timeout protection for viewport.mount()*
 - [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx) - *Manual safe area handling via signals*
-- [globals.css](file://passion/src/app/_assets/globals.css) - *Enhanced with comprehensive safe area support and Telegram UI component styles*
+- [globals.css](file://passion/src/app/globals.css) - *Enhanced with CSS-based safe area handling and 12px margin-top fix*
 - [mockEnv.ts](file://passion/src/mockEnv.ts) - *Environment mocking for development*
 - [page.tsx](file://passion/src/app/theme-params/page.tsx) - *Theme parameters inspection*
 </cite>
 
 ## Update Summary
 **Changes Made**   
-- Updated documentation to reflect enhanced safe area implementation in globals.css using CSS variables (--sat, --sar, --sab, --sal) mapped to env(safe-area-inset-*)
-- Added documentation for new CSS-based margin-top of 12px on first child of .safe-area-container to fix iOS close button overlap
-- Documented critical styles for Telegram UI components (.tgui, .tgui-app-root, .tgui-list) ensuring proper layout
+- Updated documentation to reflect new TMA SDK v3.x initialization pattern using individual component mounting (miniApp, themeParams, viewport)
+- Added timeout protection for viewport.mount() to prevent hanging on macOS Telegram
+- Ensured miniApp.ready() is called in finally block for guaranteed loading screen removal
+- Documented new CSS-based safe area handling with 12px margin-top on first child of .safe-area-container to fix iOS close button overlap
 - Updated section sources to reflect actual file locations and changes
 - Enhanced source tracking system with updated file references and annotations
 
@@ -38,7 +39,7 @@ This document details the integration system for theme and viewport parameters i
 ## Theme and Viewport Integration Overview
 The integration system ensures that the Mini App's user interface reflects the current Telegram theme (light/dark) and respects device-specific safe areas (such as notches or rounded corners). This is achieved by synchronizing Telegram's runtime parameters with CSS variables, which are then used throughout the component styles.
 
-The initialization process has been updated to use the @tma.js/sdk v3.x pattern with individual component mounting. The new TMAInitializer component orchestrates the mounting of key SDK components, including theme and viewport handlers. Components are mounted individually using their mount() methods, with special attention to viewport.mount() which requires timeout protection due to known issues on macOS Telegram.
+The initialization process has been updated to use the @tma.js/sdk v3.x pattern with individual component mounting. The new initialization approach separates the mounting of key SDK components, including theme and viewport handlers. Components are mounted individually using their mount() methods, with special attention to viewport.mount() which requires timeout protection due to known issues on macOS Telegram.
 
 ```mermaid
 flowchart TD
@@ -186,12 +187,12 @@ ready()
 ```
 
 **Diagram sources**
-- [globals.css](file://passion/src/app/_assets/globals.css#L1-L86)
+- [globals.css](file://passion/src/app/globals.css#L1-L86)
 - [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L26-L125)
 - [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L21-L161)
 
 **Section sources**
-- [globals.css](file://passion/src/app/_assets/globals.css#L1-L86)
+- [globals.css](file://passion/src/app/globals.css#L1-L86)
 - [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L26-L125)
 - [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L21-L161)
 
@@ -208,7 +209,7 @@ This system supports both portrait and landscape orientations and adapts to plat
 - [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L60-L79)
 - [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L34-L105)
 - [mockEnv.ts](file://passion/src/mockEnv.ts#L25-L45)
-- [globals.css](file://passion/src/app/_assets/globals.css#L46-L50)
+- [globals.css](file://passion/src/app/globals.css#L46-L50)
 
 ## Common Issues and Debugging Strategies
 ### Delayed Theme Updates
@@ -261,13 +262,13 @@ M --> R[Verify 12px margin-top on .safe-area-container first child]
 - [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L60-L79)
 - [mockEnv.ts](file://passion/src/mockEnv.ts#L25-L45)
 - [page.tsx](file://passion/src/app/theme-params/page.tsx#L10-L11)
-- [globals.css](file://passion/src/app/_assets/globals.css#L46-L50)
+- [globals.css](file://passion/src/app/globals.css#L46-L50)
 
 **Section sources**
 - [TMAInitializer.tsx](file://passion/src/components/TMAInitializer/TMAInitializer.tsx#L60-L79)
 - [mockEnv.ts](file://passion/src/mockEnv.ts#L25-L45)
 - [page.tsx](file://passion/src/app/theme-params/page.tsx#L10-L11)
-- [globals.css](file://passion/src/app/_assets/globals.css#L46-L50)
+- [globals.css](file://passion/src/app/globals.css#L46-L50)
 
 ## Best Practices for Theme-Responsive Components
 - Always use `var(--tg-theme-*)` variables for colors to ensure theme consistency.
@@ -286,10 +287,10 @@ M --> R[Verify 12px margin-top on .safe-area-container first child]
 Following these practices ensures a seamless integration with Telegram’s UI and enhances user experience across all platforms.
 
 **Section sources**
-- [globals.css](file://passion/src/app/_assets/globals.css#L2)
+- [globals.css](file://passion/src/app/globals.css#L2)
 - [SafeAreaProvider.tsx](file://passion/src/components/SafeAreaProvider/SafeAreaProvider.tsx#L26-L125)
 - [page.tsx](file://passion/src/app/theme-params/page.tsx#L10)
-- [globals.css](file://passion/src/app/_assets/globals.css#L46-L50)
+- [globals.css](file://passion/src/app/globals.css#L46-L50)
 
 ## Conclusion
 The theme and viewport integration system in this Telegram Mini App enables dynamic, responsive UIs that adapt to both visual themes and device geometry. By leveraging the updated @tma.js/sdk v3.x initialization pattern with individual mount() calls, timeout protection for viewport.mount(), and guaranteed miniApp.ready() calls, the application maintains visual consistency with Telegram while ensuring reliable initialization across all platforms. The system correctly handles the distinction between viewport dimension variables (created by bindCssVars()) and safe area values (accessed via signals), providing a robust foundation for adaptive UI development. The enhanced `globals.css` with comprehensive safe area support using CSS variables (`--sat`, `--sar`, `--sab`, `--sal`) and the implementation of a 12px margin-top on the first child of `.safe-area-container` to fix iOS close button overlap represent significant improvements over the previous JavaScript-based approach. Proper initialization, CSS variable usage, and debugging strategies are essential for a robust implementation.
