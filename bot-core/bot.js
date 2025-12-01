@@ -4,9 +4,72 @@ import { AVATARS } from "./prompts.js"; // 🎭 Импорт промптов и
 import fs from "fs/promises"; // 🗑️ Для удаления файлов сессий
 import path from "path"; // 📁 Для работы с путями
 
-// 🔑 Ваши ключи (из переменных окружения)
-const BOT_TOKEN = process.env.BOT_TOKEN || "***REMOVED***";
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "***REMOVED***";
+// 🔑 Load environment variables
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// Get directory name for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load .env.local file
+dotenv.config({ path: join(__dirname, '.env.local') });
+
+// Validate required environment variables
+function validateEnvironmentVariables() {
+  const required = {
+    BOT_TOKEN: process.env.BOT_TOKEN,
+    OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY
+  };
+
+  const missing = [];
+  const invalid = [];
+
+  // Check for missing variables
+  for (const [name, value] of Object.entries(required)) {
+    if (!value || value.trim() === '') {
+      missing.push(name);
+    }
+  }
+
+  // Validate format if variables exist
+  if (required.BOT_TOKEN && !required.BOT_TOKEN.includes(':')) {
+    invalid.push('BOT_TOKEN (should contain ":")');
+  }
+
+  if (required.OPENROUTER_API_KEY && !required.OPENROUTER_API_KEY.startsWith('sk-or-v1-')) {
+    invalid.push('OPENROUTER_API_KEY (should start with "sk-or-v1-")');
+  }
+
+  if (missing.length > 0 || invalid.length > 0) {
+    console.error('\n❌ CONFIGURATION ERROR:\n');
+    
+    if (missing.length > 0) {
+      console.error('Missing required environment variables:');
+      missing.forEach(name => console.error(`  - ${name}`));
+      console.error('\n');
+    }
+
+    if (invalid.length > 0) {
+      console.error('Invalid environment variable format:');
+      invalid.forEach(msg => console.error(`  - ${msg}`));
+      console.error('\n');
+    }
+
+    console.error('Please create a .env.local file in the bot-core directory.');
+    console.error('See .env.example for the required format.\n');
+    process.exit(1);
+  }
+
+  console.log('✅ Environment variables validated successfully\n');
+  return required;
+}
+
+// Validate and get environment variables
+const env = validateEnvironmentVariables();
+const BOT_TOKEN = env.BOT_TOKEN;
+const OPENROUTER_API_KEY = env.OPENROUTER_API_KEY;
 
 const bot = new Bot(BOT_TOKEN);
 

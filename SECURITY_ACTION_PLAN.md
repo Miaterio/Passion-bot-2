@@ -33,7 +33,7 @@ The following protective measures have been implemented:
 
 1. Login to https://openrouter.ai
 2. Navigate to: API Keys section
-3. Find the compromised key (ends with ...e06cbe9f)
+3. Find the compromised key (if still visible)
 4. Click: Delete/Revoke
 5. Click: Create New API Key
 6. Copy the new key
@@ -71,9 +71,11 @@ You should see: `✅ Environment variables validated successfully`
 
 3. **Create a file with secrets to remove** (`secrets.txt`):
    ```
-   ***REMOVED***
-   ***REMOVED***
+   [REVOKED_TELEGRAM_BOT_TOKEN]
+   [REVOKED_OPENROUTER_API_KEY]
    ```
+   
+   ⚠️ **Note**: Replace the placeholders above with the actual exposed secrets from the GitHub alert email.
 
 4. **Run BFG to replace secrets**:
    ```bash
@@ -105,9 +107,11 @@ You should see: `✅ Environment variables validated successfully`
 
 3. **Create expressions file** (`filter-expressions.txt`):
    ```
-   ***REMOVED***==>TELEGRAM_BOT_TOKEN_REMOVED
-   ***REMOVED***==>OPENROUTER_API_KEY_REMOVED
+   [REVOKED_TELEGRAM_BOT_TOKEN]==>TELEGRAM_BOT_TOKEN_REMOVED
+   [REVOKED_OPENROUTER_API_KEY]==>OPENROUTER_API_KEY_REMOVED
    ```
+   
+   ⚠️ **Note**: Replace the placeholders above with the actual exposed secrets from the GitHub alert email.
 
 4. **Run filter-repo**:
    ```bash
@@ -133,9 +137,9 @@ After cleaning git history:
 2. **Verify secrets are removed**:
    ```bash
    git log --all --pretty=format: --name-only --diff-filter=A | \
-   xargs -I {} git log --all --pretty=format: -S "8315370424" {}
+   xargs -I {} git log --all --pretty=format: -S "[SEARCH_PATTERN]" {}
    ```
-   Should return no results.
+   Should return no results. Replace `[SEARCH_PATTERN]` with a portion of your old token.
 
 3. **Close GitHub's secret scanning alerts** in the repository settings.
 
