@@ -35,7 +35,7 @@ participant Client as "Client"
 participant Instrumentation as "instrumentation-client.ts"
 participant Mock as "mockEnv.ts"
 participant Init as "init.ts"
-participant SDK as "@telegram-apps/sdk-react"
+participant SDK as "@tma.js/sdk-react"
 Client->>Instrumentation : Application Load
 Instrumentation->>Mock : mockEnv()
 Mock-->>Instrumentation : Environment Ready
@@ -100,7 +100,7 @@ The `Root` component employs a critical pattern for Telegram Mini Apps: it displ
 
 ## Data Flow and State Management
 
-The application implements a reactive data flow pattern using signals from the @telegram-apps/sdk-react package. This approach enables efficient state management by creating observable references to Telegram SDK data that automatically update when the underlying values change.
+The application implements a reactive data flow pattern using signals from the @tma.js/sdk-react package. This approach enables efficient state management by creating observable references to Telegram SDK data that automatically update when the underlying values change.
 
 ```mermaid
 flowchart TD

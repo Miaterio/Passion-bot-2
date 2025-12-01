@@ -21,13 +21,13 @@
 10. [Best Practices](#best-practices)
 
 ## Introduction
-The Link component is a specialized wrapper that extends Next.js's Link component with enhanced functionality for Telegram Mini Apps. It integrates the `openLink` method from `@telegram-apps/sdk-react` to properly handle external URL navigation within the Telegram client environment. This ensures that external links are opened using Telegram's native capabilities rather than default browser navigation, providing a seamless user experience within the Telegram ecosystem.
+The Link component is a specialized wrapper that extends Next.js's Link component with enhanced functionality for Telegram Mini Apps. It integrates the `openLink` method from `@tma.js/sdk-react` to properly handle external URL navigation within the Telegram client environment. This ensures that external links are opened using Telegram's native capabilities rather than default browser navigation, providing a seamless user experience within the Telegram ecosystem.
 
 **Section sources**
 - [Link.tsx](file://passion/src/components/Link/Link.tsx#L1-L58)
 
 ## Core Implementation
-The Link component is implemented as a functional component that wraps Next.js's Link while adding Telegram Mini Apps-specific behavior. It imports the `openLink` function from `@telegram-apps/sdk-react` to handle external URL opening. The component maintains compatibility with Next.js routing for internal links while intercepting external link clicks to use Telegram's native link opening mechanism.
+The Link component is implemented as a functional component that wraps Next.js's Link while adding Telegram Mini Apps-specific behavior. It imports the `openLink` function from `@tma.js/sdk-react` to handle external URL opening. The component maintains compatibility with Next.js routing for internal links while intercepting external link clicks to use Telegram's native link opening mechanism.
 
 ```mermaid
 flowchart TD
@@ -130,7 +130,7 @@ The component addresses security concerns by using the URL constructor for relia
 - [Link.tsx](file://passion/src/components/Link/Link.tsx#L36-L45)
 
 ## Accessibility and Compatibility
-The component maintains accessibility by preserving all standard anchor attributes and click handling. It is compatible with different Telegram client versions through the `@telegram-apps/sdk-react` abstraction layer. The component works correctly in both development and production environments, with proper handling of the Telegram Mini Apps SDK availability.
+The component maintains accessibility by preserving all standard anchor attributes and click handling. It is compatible with different Telegram client versions through the `@tma.js/sdk-react` abstraction layer. The component works correctly in both development and production environments, with proper handling of the Telegram Mini Apps SDK availability.
 
 **Section sources**
 - [Link.tsx](file://passion/src/components/Link/Link.tsx#L1-L58)

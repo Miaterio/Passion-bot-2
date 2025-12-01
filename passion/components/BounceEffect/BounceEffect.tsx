@@ -8,6 +8,7 @@ interface BounceEffectProps {
     children: React.ReactNode;
     maxPullDistance?: number;
     resistance?: number;
+    className?: string;
 }
 
 /**
@@ -19,8 +20,10 @@ interface BounceEffectProps {
 export function BounceEffect({
     children,
     maxPullDistance = 120,
-    resistance = 0.4
-}: BounceEffectProps) {
+    resistance = 0.4,
+    className = '',
+    style = {}
+}: BounceEffectProps & { style?: React.CSSProperties }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const contentRef = useRef<HTMLDivElement>(null);
     const [isAnimating, setIsAnimating] = useState(false);
@@ -203,16 +206,13 @@ export function BounceEffect({
     return (
         <div
             ref={containerRef}
+            className={className}
             style={{
                 minHeight: '100%',
-                height: 'auto',
+                height: '100%',
                 overflowY: 'auto',
                 WebkitOverflowScrolling: 'touch',
-                // Add padding to prevent content clipping during bounce
-                paddingTop: `${maxPullDistance}px`,
-                paddingBottom: `${maxPullDistance}px`,
-                marginTop: `-${maxPullDistance}px`,
-                marginBottom: `-${maxPullDistance}px`,
+                ...style
             }}
         >
             <div

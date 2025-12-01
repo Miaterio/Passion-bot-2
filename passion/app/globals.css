@@ -24,12 +24,19 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
-/* Telegram Mini App Safe Area Support */
-:root {
-  --tg-content-safe-area-inset-top: env(safe-area-inset-top);
-  --tg-content-safe-area-inset-bottom: env(safe-area-inset-bottom);
-  --tg-content-safe-area-inset-left: env(safe-area-inset-left);
-  --tg-content-safe-area-inset-right: env(safe-area-inset-right);
+html {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
+
+/* Telegram Mini App CSS Variables */
+/* Note: These are set dynamically by providers.tsx */
+/* --tg-viewport-height, --tg-viewport-width, --tg-viewport-stable-height */
+/* --tg-content-safe-area-inset-top, --tg-content-safe-area-inset-bottom */
+/* --tg-content-safe-area-inset-left, --tg-content-safe-area-inset-right */

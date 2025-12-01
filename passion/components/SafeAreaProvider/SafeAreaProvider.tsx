@@ -2,7 +2,6 @@
 
 import { useEffect, type ReactNode } from 'react';
 import { miniApp, themeParams, viewport } from '@tma.js/sdk';
-import { useSignal } from '@tma.js/sdk-react';
 
 interface SafeAreaProviderProps {
     children: ReactNode;
@@ -19,99 +18,102 @@ interface SafeAreaProviderProps {
  * With proper error handling for non-Telegram environments.
  */
 export function SafeAreaProvider({ children }: SafeAreaProviderProps) {
-    // Use useSignal to reactively track SDK values
-    const theme = useSignal(themeParams.state);
-    const vp = useSignal(viewport.state);
-    // Track safe area insets reactively
-    const safeAreaInsets = useSignal(viewport.safeAreaInsets);
-    const contentSafeAreaInsets = useSignal(viewport.contentSafeAreaInsets);
-
-    // Apply Telegram theme colors to CSS variables
+    // Initialize MiniApp and Viewport
     useEffect(() => {
-        if (!theme) return;
-
         try {
-            const root = document.documentElement;
-
-            // Set all Telegram theme colors as CSS custom properties
-            Object.entries(theme).forEach(([key, value]) => {
-                if (value) {
-                    // Convert snake_case to kebab-case for CSS
-                    const cssVarName = `--tg-theme-${key.replace(/_/g, '-')}`;
-                    root.style.setProperty(cssVarName, value);
-                }
-            });
-
-            console.log('✅ Telegram theme applied:', theme);
+            miniApp.ready();
+            console.log('✅ MiniApp ready called');
         } catch (error) {
-            console.warn('⚠️ Error applying theme:', error);
+            console.warn('⚠️ Error calling miniApp.ready():', error);
         }
-    }, [theme]);
+        
+        try {
+            viewport.expand();
+            console.log('✅ Viewport expanded');
+        } catch (error) {
+            console.warn('⚠️ Error expanding viewport:', error);
+        }
+    }, []);
 
-    // Handle content safe area insets (reactively via useSignal)
+    // Bind Telegram theme CSS variables using built-in method
     useEffect(() => {
-        if (!contentSafeAreaInsets) {
-            console.warn('⚠️ Content safe area insets not available');
-            return;
-        }
-
         try {
-            const root = document.documentElement;
-
-            // Set content safe area CSS variables
-            root.style.setProperty('--tg-content-safe-area-inset-top', `${contentSafeAreaInsets.top || 0}px`);
-            root.style.setProperty('--tg-content-safe-area-inset-bottom', `${contentSafeAreaInsets.bottom || 0}px`);
-            root.style.setProperty('--tg-content-safe-area-inset-left', `${contentSafeAreaInsets.left || 0}px`);
-            root.style.setProperty('--tg-content-safe-area-inset-right', `${contentSafeAreaInsets.right || 0}px`);
-
-            console.log('✅ Content safe area updated:', contentSafeAreaInsets);
+            if (themeParams.bindCssVars.isAvailable()) {
+                // bindCssVars automatically creates CSS variables like --tg-theme-bg-color
+                // and keeps them updated when theme changes
+                const unbind = themeParams.bindCssVars();
+                console.log('✅ Telegram theme CSS variables bound');
+                return unbind;
+            }
         } catch (error) {
-            console.warn('⚠️ Error updating content safe area:', error);
+            console.warn('⚠️ Error binding theme CSS variables:', error);
         }
-    }, [contentSafeAreaInsets]);
+    }, []);
 
-    // Handle device safe area insets (reactively via useSignal)
+    // Bind Viewport CSS variables using built-in method with custom naming
     useEffect(() => {
-        if (!safeAreaInsets) {
-            console.warn('⚠️ Safe area insets not available');
-            return;
-        }
-
         try {
-            const root = document.documentElement;
-
-            // Set device safe area CSS variables
-            root.style.setProperty('--tg-safe-area-inset-top', `${safeAreaInsets.top || 0}px`);
-            root.style.setProperty('--tg-safe-area-inset-bottom', `${safeAreaInsets.bottom || 0}px`);
-            root.style.setProperty('--tg-safe-area-inset-left', `${safeAreaInsets.left || 0}px`);
-            root.style.setProperty('--tg-safe-area-inset-right', `${safeAreaInsets.right || 0}px`);
-
-            console.log('✅ Safe area insets updated:', safeAreaInsets);
+            if (viewport.bindCssVars.isAvailable()) {
+                // Use custom CSS variable naming to match existing code expectations
+                // Default would be --tg-viewport-*, but we want --tg-* for compatibility
+                const unbind = viewport.bindCssVars((key) => {
+                    // Map viewport property keys to CSS variable names without 'viewport-' prefix
+                    const nameMap: Record<string, string> = {
+                        'height': '--tg-viewport-height',
+                        'width': '--tg-viewport-width',
+                        'stableHeight': '--tg-viewport-stable-height',
+                        'contentSafeAreaInsetTop': '--tg-content-safe-area-inset-top',
+                        'contentSafeAreaInsetBottom': '--tg-content-safe-area-inset-bottom',
+                        'contentSafeAreaInsetLeft': '--tg-content-safe-area-inset-left',
+                        'contentSafeAreaInsetRight': '--tg-content-safe-area-inset-right',
+                        'safeAreaInsetTop': '--tg-safe-area-inset-top',
+                        'safeAreaInsetBottom': '--tg-safe-area-inset-bottom',
+                        'safeAreaInsetLeft': '--tg-safe-area-inset-left',
+                        'safeAreaInsetRight': '--tg-safe-area-inset-right',
+                    };
+                    return nameMap[key] || `--tg-viewport-${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+                });
+                
+                // Log initial values for debugging
+                console.log('✅ Viewport CSS variables bound:', {
+                    height: viewport.height(),
+                    stableHeight: viewport.stableHeight(),
+                    isExpanded: viewport.isExpanded(),
+                    safeAreaInsets: viewport.safeAreaInsets(),
+                    contentSafeAreaInsets: viewport.contentSafeAreaInsets()
+                });
+                
+                // Verify CSS variables are actually set in DOM
+                setTimeout(() => {
+                    const computedStyle = getComputedStyle(document.documentElement);
+                    const safeTop = computedStyle.getPropertyValue('--tg-safe-area-inset-top');
+                    const contentSafeTop = computedStyle.getPropertyValue('--tg-content-safe-area-inset-top');
+                    const safeBottom = computedStyle.getPropertyValue('--tg-safe-area-inset-bottom');
+                    const contentSafeBottom = computedStyle.getPropertyValue('--tg-content-safe-area-inset-bottom');
+                    
+                    console.log('🔍 SAFE AREA DIAGNOSTIC:', {
+                        'Device Safe Area Top (--tg-safe-area-inset-top)': safeTop,
+                        'Telegram UI Top (--tg-content-safe-area-inset-top)': contentSafeTop,
+                        'Total Top Should Be': `${safeTop} + ${contentSafeTop} + 16px spacing`,
+                        'Device Safe Area Bottom (--tg-safe-area-inset-bottom)': safeBottom,
+                        'Telegram UI Bottom (--tg-content-safe-area-inset-bottom)': contentSafeBottom
+                    });
+                    
+                    console.log('🔍 CSS Variables in DOM', {
+                        '--tg-safe-area-inset-top': safeTop,
+                        '--tg-content-safe-area-inset-top': contentSafeTop,
+                        '--tg-content-safe-area-inset-bottom': contentSafeBottom,
+                        '--tg-content-safe-area-inset-left': computedStyle.getPropertyValue('--tg-content-safe-area-inset-left'),
+                        '--tg-content-safe-area-inset-right': computedStyle.getPropertyValue('--tg-content-safe-area-inset-right')
+                    });
+                }, 100);
+                
+                return unbind;
+            }
         } catch (error) {
-            console.warn('⚠️ Error updating safe area insets:', error);
+            console.warn('⚠️ Error binding viewport CSS variables:', error);
         }
-    }, [safeAreaInsets]);
-
-    // Handle viewport properties
-    useEffect(() => {
-        if (!vp) return;
-
-        try {
-            const root = document.documentElement;
-
-            // Set viewport height variables
-            root.style.setProperty('--tg-viewport-height', `${vp.height || 0}px`);
-            root.style.setProperty('--tg-viewport-stable-height', `${vp.stableHeight || 0}px`);
-
-            console.log('✅ Viewport info updated:', {
-                height: vp.height,
-                stableHeight: vp.stableHeight,
-                isExpanded: vp.isExpanded,
-            });
-        } catch (error) {
-            console.warn('⚠️ Error updating viewport info:', error);
-        }
-    }, [vp]);
+    }, []);
 
     return <>{children}</>;
 }

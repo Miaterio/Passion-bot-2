@@ -20,7 +20,7 @@
 
 ## Introduction
 
-The Launch Parameters Access feature provides critical runtime information about the Telegram client environment, enabling developers to create responsive and adaptive web applications within the Telegram ecosystem. This document details how the `useLaunchParams` hook from `@telegram-apps/sdk-react` retrieves essential client information such as platform type, app version, and start parameters. The implementation demonstrates how this information is displayed and utilized within the application to enhance user experience through platform-specific adaptations and feature detection.
+The Launch Parameters Access feature provides critical runtime information about the Telegram client environment, enabling developers to create responsive and adaptive web applications within the Telegram ecosystem. This document details how the `useLaunchParams` hook from `@tma.js/sdk-react` retrieves essential client information such as platform type, app version, and start parameters. The implementation demonstrates how this information is displayed and utilized within the application to enhance user experience through platform-specific adaptations and feature detection.
 
 **Section sources**
 - [page.tsx](file://passion/src/app/launch-params/page.tsx#L1-L34)

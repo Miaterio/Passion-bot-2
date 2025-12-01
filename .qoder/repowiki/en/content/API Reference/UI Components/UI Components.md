@@ -119,7 +119,7 @@ Extends Next.js `LinkProps` and HTML anchor attributes:
 - All standard anchor element props (onClick, target, etc.)
 
 ### Navigation Logic
-The component automatically detects external links by comparing protocol and host with the current URL. External links are opened using `@telegram-apps/sdk-react`'s `openLink` function to ensure proper behavior within Telegram, while preventing default anchor behavior.
+The component automatically detects external links by comparing protocol and host with the current URL. External links are opened using `@tma.js/sdk-react`'s `openLink` function to ensure proper behavior within Telegram, while preventing default anchor behavior.
 
 ### Styling
 Applies the `link` CSS class which removes text decoration and uses `--tg-theme-link-color` for consistent theming with the Telegram interface.

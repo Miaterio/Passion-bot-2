@@ -19,7 +19,7 @@
 
 ## Mocking the Telegram Environment
 
-The development environment enables testing of Telegram Mini Apps outside the Telegram client through the `mockEnv` function in `src/mockEnv.ts`. This function conditionally activates only during development mode (`NODE_ENV === 'development'`) and uses `isTMA('complete')` to detect whether the app is running within a genuine Telegram environment. If not, it mocks the environment using `mockTelegramEnv` from `@telegram-apps/sdk-react`.
+The development environment enables testing of Telegram Mini Apps outside the Telegram client through the `mockEnv` function in `src/mockEnv.ts`. This function conditionally activates only during development mode (`NODE_ENV === 'development'`) and uses `isTMA('complete')` to detect whether the app is running within a genuine Telegram environment. If not, it mocks the environment using `mockTelegramEnv` from `@tma.js/sdk-react`.
 
 The mock environment simulates essential Telegram Mini App behaviors by providing predefined launch parameters and theme configurations. These include a comprehensive `themeParams` object that defines color schemes matching Telegram's dark theme, ensuring visual consistency during development. The mocked launch parameters include `tgWebAppThemeParams`, `tgWebAppData`, `tgWebAppVersion`, and `tgWebAppPlatform`, allowing the application to function as if it were launched from Telegram Desktop (`tdesktop`).
 

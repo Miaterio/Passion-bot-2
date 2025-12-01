@@ -233,7 +233,7 @@ SDK->>Browser : Initialize Components
 
 ## Core Initialization Process
 
-Application initialization is managed through `init.ts`, which configures the `@telegram-apps/sdk-react` library and mounts essential components such as the back button, mini app interface, and viewport handler. The `init()` function accepts configuration options including debug mode and Eruda console injection for mobile debugging.
+Application initialization is managed through `init.ts`, which configures the `@tma.js/sdk-react` library and mounts essential components such as the back button, mini app interface, and viewport handler. The `init()` function accepts configuration options including debug mode and Eruda console injection for mobile debugging.
 
 The initialization sequence ensures that all Telegram-specific features are properly bound to CSS variables and React signals, enabling real-time updates when the user changes themes or resizes the app window.
 

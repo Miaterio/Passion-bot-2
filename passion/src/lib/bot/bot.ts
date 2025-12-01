@@ -8,7 +8,7 @@ import fs from "fs/promises";
 interface SessionData {
     avatar: Avatar | null;
     ageConfirmed: boolean;
-    messages: { role: string; content: string }[];
+    messages: { id?: string; role: string; content: string }[];
     botMessages: number[];
     userMessages: number[];
 }
@@ -135,7 +135,7 @@ export async function generateAIResponse(
     return data.choices[0].message.content;
 }
 
-function splitMessage(text: string) {
+export function splitMessage(text: string) {
     const parts = text.split(/\n\s*\n/g).filter((part) => part.trim().length > 0);
     const finalParts = [];
     const MAX_PART_LENGTH = 600;

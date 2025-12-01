@@ -18,7 +18,7 @@
 7. [Conclusion](#conclusion)
 
 ## Introduction
-The Environment Mocking sub-feature enables development and testing of Telegram Mini Apps outside the Telegram environment by simulating critical Telegram Mini Apps events and launch parameters. This capability is essential for efficient development workflows, allowing developers to build and debug applications in standard web browsers without requiring constant deployment to Telegram. The system leverages the `@telegram-apps/sdk-react` library's `mockTelegramEnv` function to intercept and respond to Telegram-specific events, creating a realistic simulation of the Telegram environment. This documentation details the implementation, integration, and usage patterns of the environment mocking system, focusing on how it enables seamless development while ensuring production safety through conditional execution.
+The Environment Mocking sub-feature enables development and testing of Telegram Mini Apps outside the Telegram environment by simulating critical Telegram Mini Apps events and launch parameters. This capability is essential for efficient development workflows, allowing developers to build and debug applications in standard web browsers without requiring constant deployment to Telegram. The system leverages the `@tma.js/sdk-react` library's `mockTelegramEnv` function to intercept and respond to Telegram-specific events, creating a realistic simulation of the Telegram environment. This documentation details the implementation, integration, and usage patterns of the environment mocking system, focusing on how it enables seamless development while ensuring production safety through conditional execution.
 
 ## Core Components
 The environment mocking system consists of three primary components: the `mockEnv` function that creates the simulated environment, the `instrumentation-client` that orchestrates initialization, and the `init` function that handles platform-specific mocking. These components work together to detect the execution environment, simulate Telegram events, and provide realistic launch parameters for development purposes. The system is designed to be transparent to the application logic while providing sufficient fidelity to accurately represent the Telegram Mini Apps environment during development.
@@ -71,7 +71,7 @@ The core of the mocking functionality is the `mockTelegramEnv` call, which inter
 sequenceDiagram
 participant Browser
 participant mockEnv as mockEnv.ts
-participant SDK as @telegram-apps/sdk-react
+participant SDK as @tma.js/sdk-react
 Browser->>mockEnv : Application Initialization
 mockEnv->>mockEnv : Check NODE_ENV !== 'development'
 alt Development Mode
@@ -169,14 +169,14 @@ end
 ## Dependency Analysis
 The environment mocking system demonstrates a well-structured dependency graph with clear separation of concerns. The `instrumentation-client.ts` file serves as the integration point, importing and calling `mockEnv` before proceeding with application initialization. This sequential dependency ensures that the mocking environment is established before any Telegram SDK functionality is utilized.
 
-The `mockEnv.ts` file depends on `@telegram-apps/sdk-react` for the `mockTelegramEnv`, `isTMA`, and `emitEvent` functions, creating a direct dependency on the Telegram SDK for its mocking capabilities. This design leverages the SDK's built-in mocking support rather than implementing a custom solution, ensuring compatibility and reducing maintenance overhead.
+The `mockEnv.ts` file depends on `@tma.js/sdk-react` for the `mockTelegramEnv`, `isTMA`, and `emitEvent` functions, creating a direct dependency on the Telegram SDK for its mocking capabilities. This design leverages the SDK's built-in mocking support rather than implementing a custom solution, ensuring compatibility and reducing maintenance overhead.
 
 The `init.ts` file contains a conditional dependency on the mocking system through the `mockForMacOS` flag, demonstrating a targeted approach to platform-specific issues. This dependency is only activated when the platform is detected as macOS, minimizing the impact on other platforms.
 
 ```mermaid
 graph TD
 A["instrumentation-client.ts"] --> B["mockEnv.ts"]
-B --> C["@telegram-apps/sdk-react"]
+B --> C["@tma.js/sdk-react"]
 A --> D["init.ts"]
 D --> C
 D --> B
@@ -213,4 +213,4 @@ Finally, if the application crashes outside Telegram despite the mock being acti
 - [init.ts](file://passion/src/core/init.ts#L39-L65)
 
 ## Conclusion
-The environment mocking system provides a robust solution for developing Telegram Mini Apps outside the Telegram ecosystem. By leveraging the `@telegram-apps/sdk-react` library's built-in mocking capabilities, the implementation creates a realistic simulation of Telegram events and launch parameters while maintaining production safety through conditional execution. The architecture demonstrates thoughtful design patterns, including tree-shaking compatibility, platform-specific handling, and realistic data simulation. This system enables efficient development workflows while ensuring that the application behaves correctly when deployed to the actual Telegram environment.
+The environment mocking system provides a robust solution for developing Telegram Mini Apps outside the Telegram ecosystem. By leveraging the `@tma.js/sdk-react` library's built-in mocking capabilities, the implementation creates a realistic simulation of Telegram events and launch parameters while maintaining production safety through conditional execution. The architecture demonstrates thoughtful design patterns, including tree-shaking compatibility, platform-specific handling, and realistic data simulation. This system enables efficient development workflows while ensuring that the application behaves correctly when deployed to the actual Telegram environment.

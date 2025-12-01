@@ -20,7 +20,7 @@
 6. [Common Issues and Best Practices](#common-issues-and-best-practices)
 
 ## Introduction
-This guide provides a comprehensive overview of key features in the Telegram Mini App ecosystem, focusing on wallet integration, initialization data, launch parameters, and theme customization. Each feature is implemented as a dedicated page in the application, leveraging the @telegram-apps/sdk-react library to access native Telegram WebApp functionality. The UI is built using reusable components such as Page and DisplayData, ensuring consistency and maintainability across the app.
+This guide provides a comprehensive overview of key features in the Telegram Mini App ecosystem, focusing on wallet integration, initialization data, launch parameters, and theme customization. Each feature is implemented as a dedicated page in the application, leveraging the @tma.js/sdk-react library to access native Telegram WebApp functionality. The UI is built using reusable components such as Page and DisplayData, ensuring consistency and maintainability across the app.
 
 **Section sources**
 - [page.tsx](file://passion/src/app/page.tsx#L1-L64)
@@ -68,7 +68,7 @@ end
 
 The Init Data page demonstrates access to critical user and context information provided by Telegram at launch time. This includes user profile data, chat context, and authentication parameters.
 
-The implementation uses two signals from `@telegram-apps/sdk-react`: `_initDataRaw` (the raw query string) and `_initDataState` (parsed data object). The `useSignal()` hook subscribes to changes in these values, ensuring real-time updates.
+The implementation uses two signals from `@tma.js/sdk-react`: `_initDataRaw` (the raw query string) and `_initDataState` (parsed data object). The `useSignal()` hook subscribes to changes in these values, ensuring real-time updates.
 
 When initData is available, the component parses and displays:
 - Raw initData string
@@ -101,7 +101,7 @@ RenderUI --> End([UI Updated])
 
 The Launch Parameters page exposes platform-specific information passed by Telegram during app initialization. This data helps developers tailor the experience based on the user's environment.
 
-Using the `useLaunchParams()` hook from `@telegram-apps/sdk-react`, the component retrieves:
+Using the `useLaunchParams()` hook from `@tma.js/sdk-react`, the component retrieves:
 - `tgWebAppPlatform`: Device platform (iOS, Android, macOS, etc.)
 - `tgWebAppVersion`: Telegram app version
 - `tgWebAppStartParam`: Optional start parameter for deep linking

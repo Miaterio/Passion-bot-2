@@ -21,7 +21,7 @@
 
 ## Introduction
 
-The Theme Parameters Detection feature enables Telegram Mini Apps to seamlessly adapt their appearance to match the user's current Telegram client theme. This integration ensures a consistent visual experience by allowing the application to access and respond to the native theme settings in real time. The implementation leverages the `@telegram-apps/sdk-react` library, specifically the `useSignal` hook with `themeParams.state`, to provide reactive access to theme configuration. This document details how theme parameters are detected, processed, and displayed within the application, with a focus on the implementation in the theme-params page and related components.
+The Theme Parameters Detection feature enables Telegram Mini Apps to seamlessly adapt their appearance to match the user's current Telegram client theme. This integration ensures a consistent visual experience by allowing the application to access and respond to the native theme settings in real time. The implementation leverages the `@tma.js/sdk-react` library, specifically the `useSignal` hook with `themeParams.state`, to provide reactive access to theme configuration. This document details how theme parameters are detected, processed, and displayed within the application, with a focus on the implementation in the theme-params page and related components.
 
 **Section sources**
 - [page.tsx](file://passion/src/app/theme-params/page.tsx#L1-L27)
@@ -29,7 +29,7 @@ The Theme Parameters Detection feature enables Telegram Mini Apps to seamlessly 
 
 ## Core Implementation
 
-The core implementation of theme parameter detection is centered around the `useSignal` hook from `@telegram-apps/sdk-react`, which provides reactive state management for Telegram's theme parameters. The `themeParams.state` signal is used to create a subscription to real-time theme updates, ensuring the application interface remains synchronized with the host client's appearance settings.
+The core implementation of theme parameter detection is centered around the `useSignal` hook from `@tma.js/sdk-react`, which provides reactive state management for Telegram's theme parameters. The `themeParams.state` signal is used to create a subscription to real-time theme updates, ensuring the application interface remains synchronized with the host client's appearance settings.
 
 The implementation follows a React Server Components architecture where the theme parameters page is designated as a client component using the `'use client'` directive. This allows the use of React hooks and client-side interactivity while maintaining compatibility with Next.js server-side rendering patterns.
 
@@ -92,7 +92,7 @@ In the development environment, theme changes are simulated through the mock env
 
 The color representation system in the application provides both textual and visual feedback for color values. The `DisplayData` component, in conjunction with the `RGB` component, handles the rendering of color parameters with enhanced visual indicators.
 
-When a theme parameter value is identified as a valid RGB color string (using the `isRGB` utility from `@telegram-apps/sdk-react`), it is rendered with an inline color swatch alongside the hexadecimal value. This visual representation helps users immediately understand the color being used in the theme.
+When a theme parameter value is identified as a valid RGB color string (using the `isRGB` utility from `@tma.js/sdk-react`), it is rendered with an inline color swatch alongside the hexadecimal value. This visual representation helps users immediately understand the color being used in the theme.
 
 The `RGB` component implements this visualization by creating a small inline element with a background color matching the parameter value, providing an intuitive color preview. For non-color parameters, the values are displayed as plain text or appropriate UI elements based on their data type (strings, booleans, etc.).
 

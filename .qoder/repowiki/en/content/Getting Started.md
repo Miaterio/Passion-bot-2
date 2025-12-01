@@ -74,7 +74,7 @@ Upon successful startup, you'll see output similar to:
 Open your browser and navigate to [http://localhost:3000](http://localhost:3000) to view the application.
 
 **Important notes**:
-- Some libraries like `@telegram-apps/sdk` are designed to work within Telegram but will function properly in development mode.
+- Some libraries like `@tma.js/sdk` are designed to work within Telegram but will function properly in development mode.
 - The application uses environment mocking via `mockEnv()` function to simulate the Telegram environment when running outside Telegram.
 - This mocking behavior is only applied in development mode and is tree-shaken in production builds.
 

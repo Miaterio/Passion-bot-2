@@ -89,7 +89,7 @@ Continue --> End([Application Ready])
 - [instrumentation-client.ts](file://passion/src/instrumentation-client.ts#L1-L25)
 
 ### Efficient Signal Usage for Reactivity
-The application leverages signal-based reactivity through the `@telegram-apps/sdk-react` library to optimize rendering performance. Components use `useSignal` to subscribe only to specific parts of the application state, ensuring that re-renders occur only when relevant data changes. For example, in `init-data/page.tsx`, `useSignal` is used to track `initDataRaw` and `initDataState`, minimizing unnecessary re-renders when other parts of the application state change.
+The application leverages signal-based reactivity through the `@tma.js/sdk-react` library to optimize rendering performance. Components use `useSignal` to subscribe only to specific parts of the application state, ensuring that re-renders occur only when relevant data changes. For example, in `init-data/page.tsx`, `useSignal` is used to track `initDataRaw` and `initDataState`, minimizing unnecessary re-renders when other parts of the application state change.
 
 **Section sources**
 - [init-data/page.tsx](file://passion/src/app/init-data/page.tsx#L23-L24)

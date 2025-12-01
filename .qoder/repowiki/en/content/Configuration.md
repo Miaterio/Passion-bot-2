@@ -153,8 +153,8 @@ The project includes a comprehensive set of dependencies for building a Telegram
 - **Next.js**: The core framework providing server-side rendering, routing, and API routes
 - **next-intl**: Internationalization library for multi-language support
 - **Tailwind CSS**: Utility-first CSS framework for styling
-- **@telegram-apps/sdk-react**: React integration for Telegram Mini Apps features
-- **@telegram-apps/telegram-ui**: UI components designed to match Telegram's native interface
+- **@tma.js/sdk-react**: React integration for Telegram Mini Apps features
+- **@tma.js/telegram-ui**: UI components designed to match Telegram's native interface
 
 The lock file captures exact versions of all dependencies, including transitive dependencies, preventing unexpected updates that could introduce breaking changes. PNPM's efficient dependency management approach uses hard links to reduce disk usage and improve installation speed compared to other package managers.
 

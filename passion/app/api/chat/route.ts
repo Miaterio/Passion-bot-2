@@ -1,4 +1,4 @@
-import { generateAIResponse, getUserSession, saveUserSession, bot } from "../../../src/lib/bot/bot";
+import { generateAIResponse, getUserSession, saveUserSession, bot, splitMessage } from "../../../src/lib/bot/bot";
 import { AVATARS } from "../../../src/lib/bot/prompts";
 import { NextResponse } from "next/server";
 
@@ -118,14 +118,27 @@ export async function POST(req: Request) {
             session.avatar = avatar;
         }
 
-        // Append user message
-        session.messages.push({ role: "user", content: message });
+        // Append user message with unique ID
+        session.messages.push({
+            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            role: "user",
+            content: message
+        });
         if (!session.userMessages) session.userMessages = [];
 
         const response = await generateAIResponse(userId, message, avatar.prompt, session.messages);
 
-        // Append bot response
-        session.messages.push({ role: "assistant", content: response });
+        // Split response into parts like the bot does
+        const parts = splitMessage(response);
+
+        // Add each part as a separate message with unique ID
+        for (const part of parts) {
+            session.messages.push({
+                id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                role: "assistant",
+                content: part
+            });
+        }
 
         // Save session
         await saveUserSession(userId, session);

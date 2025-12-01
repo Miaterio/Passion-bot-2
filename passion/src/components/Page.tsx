@@ -39,11 +39,7 @@ function Button({ className, state = "Default" }: ButtonProps) {
 export default function Page() {
     return (
         <div className="bg-[#100024] content-stretch flex flex-col isolate items-start justify-center relative size-full min-h-screen overflow-hidden" data-name="390x844" data-node-id="1:875">
-            {/* Status Bar Placeholder - usually handled by system */}
-            <div className="h-[44px] shrink-0 w-full z-[6]" data-name="Status Bar" data-node-id="1:876" />
-
-            {/* Telegram UI Placeholder */}
-            <div className="h-[46px] shrink-0 w-full z-[5]" data-name="Telegram UI" data-node-id="1:877" />
+            {/* Placeholder elements removed - Telegram Mini App manages its own UI chrome */}
 
             <div className="basis-0 box-border content-stretch flex flex-col grow isolate items-center justify-between min-h-px min-w-px pb-[24px] pt-[16px] px-[16px] relative shrink-0 w-full z-[4]" data-name="tg-content-safe-area-inset" data-node-id="1:878">
                 <div className="box-border content-stretch flex items-center justify-between mb-[-24px] relative shrink-0 w-full z-[2]" data-name="Top Buttons" data-node-id="1:879">

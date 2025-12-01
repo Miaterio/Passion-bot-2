@@ -37,7 +37,7 @@ async function init(options: {
 ```
 
 ### Parameters
-- **debug**: When `true`, enables debug mode in the `@telegram-apps/sdk-react` library, providing additional console logs and runtime checks.
+- **debug**: When `true`, enables debug mode in the `@tma.js/sdk-react` library, providing additional console logs and runtime checks.
 - **eruda**: If `true`, dynamically imports and initializes the Eruda debugging console, positioned in the top-right corner of the screen.
 - **mockForMacOS**: Enables workaround behavior for known bugs in Telegram for macOS, such as unresponsive theme requests and incorrect safe area reporting. When enabled, it simulates responses to `web_app_request_theme` and `web_app_request_safe_area` events.
 
@@ -185,7 +185,7 @@ return <Section header={t('header')} />;
 
 ## Integration with Telegram WebApp SDK
 
-All components and initialization logic integrate tightly with the Telegram Mini Apps SDK (`@telegram-apps/sdk-react`).
+All components and initialization logic integrate tightly with the Telegram Mini Apps SDK (`@tma.js/sdk-react`).
 
 ### Key Integrations
 - **Back Button**: Controlled via `backButton.show()`/`hide()` and `backButton.onClick()`.
@@ -203,7 +203,7 @@ The `Root` component detects platform (`macos`, `ios`) and adjusts the UI platfo
 
 ## Reactivity and Signal Patterns
 
-The application uses signal-based reactivity from `@telegram-apps/sdk-react`.
+The application uses signal-based reactivity from `@tma.js/sdk-react`.
 
 ### useSignal
 Wraps reactive values from the SDK (e.g., `miniApp.isDark`, `initData.user`) into React state.

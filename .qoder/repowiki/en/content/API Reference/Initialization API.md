@@ -13,7 +13,7 @@
 3. [Return Type and Asynchronous Behavior](#return-type-and-asynchronous-behavior)
 4. [Internal Operation Sequence](#internal-operation-sequence)
 5. [Usage Examples](#usage-examples)
-6. [Integration with @telegram-apps/sdk-react](#integration-with-telegram-appssdk-react)
+6. [Integration with @tma.js/sdk-react](#integration-with-tma.js-sdk-react)
 7. [Error Handling](#error-handling)
 8. [Guidance on mockForMacOS](#guidance-on-mockformacos)
 9. [Performance Implications](#performance-implications)
@@ -91,7 +91,7 @@ The `init` function is typically invoked in `instrumentation-client.ts`, where i
 sequenceDiagram
 participant MockEnv as mockEnv()
 participant Init as init(options)
-participant SDK as @telegram-apps/sdk-react
+participant SDK as @tma.js/sdk-react
 MockEnv->>Init : mockEnv().then()
 Init->>Init : retrieveLaunchParams()
 Init->>Init : Determine platform and debug status
@@ -106,9 +106,9 @@ SDK->>SDK : Execute initialization sequence
 **Section sources**
 - [instrumentation-client.ts](file://passion/src/instrumentation-client.ts#L8-L21)
 
-## Integration with @telegram-apps/sdk-react
+## Integration with @tma.js/sdk-react
 
-The `init` function integrates closely with the `@telegram-apps/sdk-react` package, utilizing several of its exported functions:
+The `init` function integrates closely with the `@tma.js/sdk-react` package, utilizing several of its exported functions:
 
 - **setDebug**: Configures the debug mode of the SDK based on the provided option.
 - **initSDK**: Initializes the core SDK functionality.

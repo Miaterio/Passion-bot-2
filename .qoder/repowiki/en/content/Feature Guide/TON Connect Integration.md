@@ -147,12 +147,12 @@ DisplayData --> Link : renders link values
 - [DisplayData.tsx](file://passion/src/components/DisplayData/DisplayData.tsx)
 
 ## Dependency Analysis
-The TON Connect integration relies on several internal and external dependencies. The `@tonconnect/ui-react` library provides the core wallet connectivity features, while `@telegram-apps/sdk-react` and `@telegram-apps/telegram-ui` ensure compatibility with Telegram's platform and design language.
+The TON Connect integration relies on several internal and external dependencies. The `@tonconnect/ui-react` library provides the core wallet connectivity features, while `@tma.js/sdk-react` and `@tma.js/telegram-ui` ensure compatibility with Telegram's platform and design language.
 
 ```mermaid
 graph LR
 A[TONConnectPage] --> B[@tonconnect/ui-react]
-A --> C[@telegram-apps/telegram-ui]
+A --> C[@tma.js/telegram-ui]
 A --> D[DisplayData]
 D --> E[RGB]
 D --> F[Link]
@@ -173,7 +173,7 @@ B --> J[useTonWallet]
 - [bem.ts](file://passion/src/css/bem.ts)
 
 ## Performance Considerations
-The implementation efficiently manages re-renders by leveraging React's signal-based state management from `@telegram-apps/sdk-react`. The `useTonWallet` hook provides a stable reference to the wallet object, minimizing unnecessary updates. The `DisplayData` component uses memoization patterns implicitly through its functional design, and the BEM-based class generation ensures minimal CSS recalculations.
+The implementation efficiently manages re-renders by leveraging React's signal-based state management from `@tma.js/sdk-react`. The `useTonWallet` hook provides a stable reference to the wallet object, minimizing unnecessary updates. The `DisplayData` component uses memoization patterns implicitly through its functional design, and the BEM-based class generation ensures minimal CSS recalculations.
 
 ## Troubleshooting Guide
 Common issues in TON Connect integration include missing wallet connections during development and improper manifest configuration. Developers should ensure the `tonconnect-manifest.json` file is correctly placed in the public directory and contains valid `url`, `name`, and `iconUrl` fields. During development, mocking the Telegram environment using `mockTelegramEnv` can help simulate wallet connections. Always verify that `TonConnectUIProvider` is properly wrapped around the application root and that the `manifestUrl` points to the correct location.

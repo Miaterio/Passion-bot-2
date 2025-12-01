@@ -6,6 +6,7 @@ import { useLaunchParams } from '@tma.js/sdk-react';
 import { ChatInterface } from '../src/components/ChatInterface';
 import { AvatarSlider } from '../src/components/AvatarSlider';
 import { Avatar, AVATARS } from '../src/lib/bot/prompts';
+import { logLayout, logCSSVariables } from '../src/lib/layoutLogger';
 
 // ... (Icon components remain the same, skipping for brevity in this tool call if possible, but replace_file_content needs context. 
 // Actually, I can just replace the imports and the component body.
@@ -85,12 +86,14 @@ export default function Page() {
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const [chatKey, setChatKey] = React.useState(0); // Key to force ChatInterface remount
   const { impact, selection, notification } = useHaptic();
+  const mainContentRef = React.useRef<HTMLDivElement>(null);
+  const rootContainerRef = React.useRef<HTMLDivElement>(null);
 
   // Safely retrieve launch params
   let initDataRaw = '';
   try {
     const lp = useLaunchParams();
-    initDataRaw = lp.initDataRaw || '';
+    initDataRaw = typeof lp.initDataRaw === 'string' ? lp.initDataRaw : '';
   } catch (e) {
     console.warn('Failed to get launch params:', e);
   }
@@ -100,6 +103,52 @@ export default function Page() {
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isAndroidDevice = /android/.test(userAgent);
     setIsAndroid(isAndroidDevice);
+    
+    // Log parent container measurements
+    const logContainerMeasurements = () => {
+      const statusBarHeight = isAndroidDevice ? 0 : 44;
+      const telegramUIHeight = 46;
+      const androidExtraSpacing = isAndroidDevice ? 12 : 0;
+      const fixedHeadersTotal = statusBarHeight + telegramUIHeight + androidExtraSpacing;
+      
+      logLayout('PAGE', {
+        'Platform': isAndroidDevice ? 'Android' : 'iOS',
+        'Viewport height': `${window.innerHeight}px`,
+        'Viewport width': `${window.innerWidth}px`,
+        'Status bar': `${statusBarHeight}px`,
+        'Telegram UI': `${telegramUIHeight}px`,
+        'Android spacing': `${androidExtraSpacing}px`,
+        'Fixed headers total': `${fixedHeadersTotal}px`,
+        'Expected main content': `${window.innerHeight - fixedHeadersTotal}px`,
+      });
+      
+      if (rootContainerRef.current) {
+        logLayout('PAGE', {
+          'Root container height': `${rootContainerRef.current.offsetHeight}px`,
+        });
+      }
+      
+      if (mainContentRef.current) {
+        logLayout('PAGE', {
+          'Main Content height (actual)': `${mainContentRef.current.offsetHeight}px`,
+          'Main Content height (expected)': `${window.innerHeight - fixedHeadersTotal}px`,
+        });
+      }
+      
+      // Log safe area CSS variables
+      logCSSVariables([
+        '--tg-content-safe-area-inset-top',
+        '--tg-content-safe-area-inset-bottom',
+        '--tg-content-safe-area-inset-left',
+        '--tg-content-safe-area-inset-right',
+      ]);
+    };
+    
+    // Log after mount and on resize
+    setTimeout(logContainerMeasurements, 100);
+    window.addEventListener('resize', logContainerMeasurements);
+    
+    return () => window.removeEventListener('resize', logContainerMeasurements);
   }, []);
 
   const handleAvatarSelect = (avatar: Avatar) => {
@@ -162,7 +211,10 @@ export default function Page() {
   };
 
   return (
-    <div className="w-full h-screen relative overflow-hidden flex flex-col justify-center items-start bg-[#100024]">
+    <div ref={rootContainerRef} className="w-full relative overflow-hidden flex flex-col justify-center items-start bg-[#100024]" style={{
+      height: 'var(--tg-viewport-stable-height, 100vh)',
+      maxHeight: 'var(--tg-viewport-stable-height, 100vh)'
+    }}>
       {/* Fixed Background Color */}
       <div className="fixed inset-0 bg-[#100024] z-0" />
 
@@ -204,19 +256,27 @@ export default function Page() {
         />
       </div>
 
-      {/* Status Bar Placeholder - Hidden on Android, Visible on iOS */}
-      {!isAndroid && (
-        <div className="w-full h-[44px] bg-transparent z-20 shrink-0" />
+      {/* Placeholders removed - Telegram Mini App manages its own UI chrome */}
+      {/* When not in chat mode, we still need spacing for aesthetic reasons */}
+      {!chatMode && (
+        <>
+          {/* Status Bar Placeholder - Hidden on Android, Visible on iOS */}
+          {!isAndroid && (
+            <div className="w-full h-[44px] bg-transparent z-20 shrink-0" />
+          )}
+
+          {/* Telegram UI Placeholder - Visible on both */}
+          <div className="w-full h-[46px] bg-transparent z-20 shrink-0" />
+
+          {/* Extra spacing for Android */}
+          {isAndroid && <div className="w-full h-[12px] bg-transparent z-20 shrink-0" />}
+        </>
       )}
 
-      {/* Telegram UI Placeholder - Visible on both */}
-      <div className="w-full h-[46px] bg-transparent z-20 shrink-0" />
-
-      {/* Extra spacing for Android */}
-      {isAndroid && <div className="w-full h-[12px] bg-transparent z-20 shrink-0" />}
-
       {/* Main Content Area - Safe Area Container */}
-      <div className={`w-full flex-1 flex flex-col z-20 tg-content-safe-area-inset overflow-hidden ${isAndroid ? 'pb-[46px]' : 'pb-[34px]'}`}>
+      <div ref={mainContentRef} className="w-full flex-1 flex flex-col z-20 overflow-hidden" style={{
+        paddingBottom: chatMode ? '0px' : (isAndroid ? '46px' : '34px')
+      }}>
 
         {!chatMode ? (
           <>
@@ -280,7 +340,12 @@ export default function Page() {
             </div>
           </>
         ) : (
-          <div className="flex-1 h-full">
+          <div 
+            className="w-full h-full"
+            style={{
+              animation: 'chatFadeIn 0.6s cubic-bezier(0.4, 0.0, 0.2, 1)'
+            }}
+          >
             <ChatInterface
               key={chatKey}
               avatar={selectedAvatar}
@@ -290,6 +355,17 @@ export default function Page() {
           </div>
         )}
       </div>
+
+      <style jsx>{`
+        @keyframes chatFadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+      `}</style>
 
     </div>
   );
