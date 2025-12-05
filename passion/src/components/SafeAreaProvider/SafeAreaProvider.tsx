@@ -1,9 +1,11 @@
 'use client';
 
 import { miniApp, themeParams, viewport } from '@tma.js/sdk';
-import { type PropsWithChildren, useEffect } from 'react';
+import { type PropsWithChildren, useEffect, useRef } from 'react';
 
 export function SafeAreaProvider({ children }: PropsWithChildren) {
+    const initialHeightRef = useRef<number | null>(null);
+
     // Initialize MiniApp and Viewport
     useEffect(() => {
         try {
@@ -21,12 +23,20 @@ export function SafeAreaProvider({ children }: PropsWithChildren) {
         }
     }, []);
 
+    // Capture and lock initial viewport height (before keyboard opens)
+    useEffect(() => {
+        if (initialHeightRef.current === null) {
+            const height = viewport.stableHeight?.() || viewport.height?.() || window.innerHeight;
+            initialHeightRef.current = height;
+            document.documentElement.style.setProperty('--tg-initial-height', `${height}px`);
+            console.log('🔒 Initial viewport height locked:', height);
+        }
+    }, []);
+
     // Bind Telegram theme CSS variables using built-in method
     useEffect(() => {
         try {
             if (themeParams.bindCssVars.isAvailable()) {
-                // bindCssVars automatically creates CSS variables like --tg-theme-bg-color
-                // and keeps them updated when theme changes
                 const unbind = themeParams.bindCssVars();
                 console.log('✅ Telegram theme CSS variables bound');
                 return unbind;

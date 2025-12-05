@@ -38,7 +38,7 @@ function Button({ className, state = "Default" }: ButtonProps) {
 
 export default function Page() {
     return (
-        <div className="bg-[#100024] content-stretch flex flex-col isolate items-start justify-center relative size-full min-h-screen overflow-hidden" data-name="390x844" data-node-id="1:875">
+        <div className="bg-[#100024] content-stretch flex flex-col isolate items-start justify-center relative size-full h-full overflow-hidden" data-name="390x844" data-node-id="1:875">
             {/* Placeholder elements removed - Telegram Mini App manages its own UI chrome */}
 
             <div className="basis-0 box-border content-stretch flex flex-col grow isolate items-center justify-between min-h-px min-w-px pb-[24px] pt-[16px] px-[16px] relative shrink-0 w-full z-[4]" data-name="tg-content-safe-area-inset" data-node-id="1:878">

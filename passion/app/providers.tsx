@@ -31,6 +31,13 @@ export function Providers({ children }: ProvidersProps) {
             init();
             sdkInitialized = true;
             console.log('✅ Telegram Mini App SDK initialized successfully');
+
+            // CRITICAL: Set initial viewport height ONCE, before any keyboard events
+            // This value is used by CSS to lock height during keyboard events
+            // (see globals.css body.keyboard-active rules)
+            const initialHeight = window.innerHeight;
+            document.documentElement.style.setProperty('--tg-initial-height', `${initialHeight}px`);
+            console.log(`🔒 Set --tg-initial-height: ${initialHeight}px`);
         } catch (error) {
             // Expected error when running outside Telegram
             if (error instanceof Error && error.message.includes('Unable to retrieve launch parameters')) {
@@ -48,13 +55,13 @@ export function Providers({ children }: ProvidersProps) {
                     viewport.mount();
                     viewport.expand();
                     console.log('📱 Viewport expanded to full size');
-                    
+
                     // Bind CSS variables for viewport dimensions (height, width, stable-height)
                     if (viewport.bindCssVars.isAvailable()) {
                         viewport.bindCssVars();
                         console.log('✅ CSS variables bound for viewport dimensions');
                     }
-                    
+
                     // IMPORTANT: bindCssVars() does NOT create safe area variables!
                     // We need to manually bind contentSafeAreaInsets to CSS variables
                     // 
@@ -79,7 +86,7 @@ export function Providers({ children }: ProvidersProps) {
                                     left: `${insets.left}px`,
                                     right: `${insets.right}px`
                                 });
-                                
+
                                 document.documentElement.style.setProperty('--tg-content-safe-area-inset-top', `${insets.top}px`);
                                 document.documentElement.style.setProperty('--tg-content-safe-area-inset-bottom', `${insets.bottom}px`);
                                 document.documentElement.style.setProperty('--tg-content-safe-area-inset-left', `${insets.left}px`);
@@ -92,10 +99,10 @@ export function Providers({ children }: ProvidersProps) {
                             console.warn('⚠️ Could not bind safe area vars:', error);
                         }
                     };
-                    
+
                     // Bind immediately
                     bindSafeAreaVars();
-                    
+
                     // Subscribe to changes (when keyboard appears, orientation changes, etc.)
                     if (viewport.contentSafeAreaInsets.sub) {
                         viewport.contentSafeAreaInsets.sub(bindSafeAreaVars);
@@ -111,7 +118,7 @@ export function Providers({ children }: ProvidersProps) {
                 if (miniApp.mount.isAvailable()) {
                     miniApp.mount();
                     console.log('✅ MiniApp mounted');
-                    
+
                     // Note: Content safe area is automatically available when viewport is expanded
                     // in fullscreen mode with Bot API 8.0+. No explicit request needed in SDK v3.
                 }
@@ -130,7 +137,7 @@ export function Providers({ children }: ProvidersProps) {
                             isExpanded: viewport.isExpanded()
                         }
                     });
-                    
+
                     if (safeArea.bottom === 0 && safeArea.top === 0) {
                         console.warn('⚠️ Safe area insets are all zero - check Bot API version (requires 8.0+)');
                     }

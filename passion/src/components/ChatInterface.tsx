@@ -2,6 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import { BounceEffect } from '../../components/BounceEffect/BounceEffect';
 import { Avatar } from '../lib/bot/prompts';
 import { useHaptic } from '../hooks/useHaptic';
+import { useConsoleCopy } from '../hooks/useConsoleCopy';
+import { useKeyboardDiagnostics } from '../hooks/useKeyboardDiagnostics';
+import { useKeyboardState } from '../hooks/useKeyboardState';
+import { useVisualViewportFix } from '../hooks/useVisualViewportFix';
 
 interface Message {
     id: string;
@@ -13,29 +17,61 @@ interface ChatInterfaceProps {
     avatar: Avatar;
     onBack: () => void;
     initData: string;
+    isExiting?: boolean;
+    onExitComplete?: () => void;
+    onKeyboardChange?: (isOpen: boolean) => void;
+    onInputFocusChange?: (isFocused: boolean) => void;
 }
 
-export function ChatInterface({ avatar, onBack, initData }: ChatInterfaceProps) {
+export function ChatInterface({ avatar, onBack, initData, isExiting, onExitComplete, onKeyboardChange, onInputFocusChange }: ChatInterfaceProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
-    const [isAnimationComplete, setIsAnimationComplete] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const initialViewportHeightRef = useRef<number>(0);
     const { selection, notification } = useHaptic();
 
-    // Mount animation with state transition
+    // Capture initial viewport height on mount (before any keyboard events)
     useEffect(() => {
-        // Trigger entrance animation after a small delay to let layout settle
+        if (typeof window !== 'undefined' && initialViewportHeightRef.current === 0) {
+            initialViewportHeightRef.current = window.innerHeight;
+            console.log('🔒 ChatInterface captured initial viewport height:', initialViewportHeightRef.current);
+        }
+    }, []);
+
+    // Track keyboard state to disable transitions during keyboard events
+    const isKeyboardOpen = useKeyboardState({ inputRef });
+
+    // Fix iOS visual viewport offset (counter iOS slide animation)
+    useVisualViewportFix();
+
+    // Notify parent about keyboard state changes
+    useEffect(() => {
+        onKeyboardChange?.(isKeyboardOpen);
+    }, [isKeyboardOpen, onKeyboardChange]);
+
+    // Enhanced diagnostics and console copy
+    useKeyboardDiagnostics();
+    const { copyLogs, clearLogs, logsCount } = useConsoleCopy();
+    const isDev = process.env.NODE_ENV === 'development';
+
+    // Handle exit animation
+    useEffect(() => {
+        if (isExiting) {
+            const timer = setTimeout(() => {
+                onExitComplete?.();
+            }, 600); // Match transition duration
+            return () => clearTimeout(timer);
+        }
+    }, [isExiting, onExitComplete]);
+
+    // Mount animation
+    useEffect(() => {
         const mountTimer = setTimeout(() => setIsMounted(true), 100);
-        // Switch to static positioning after animation completes (100ms delay + 600ms animation)
-        const animationTimer = setTimeout(() => setIsAnimationComplete(true), 700);
-        return () => {
-            clearTimeout(mountTimer);
-            clearTimeout(animationTimer);
-        };
+        return () => clearTimeout(mountTimer);
     }, []);
 
     const scrollToBottom = () => {
@@ -45,6 +81,98 @@ export function ChatInterface({ avatar, onBack, initData }: ChatInterfaceProps) 
     useEffect(() => {
         scrollToBottom();
     }, [messages, isTyping]);
+
+    // Aggressive scroll reset when keyboard is open
+    useEffect(() => {
+        if (!isKeyboardOpen) return;
+
+        const resetScroll = () => {
+            if (window.scrollY !== 0 || window.scrollX !== 0) {
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+            }
+            // Also reset on document level
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+        };
+
+        // Prevent scroll events entirely
+        const preventScroll = (e: Event) => {
+            // Only prevent window-level scroll, not scroll inside containers
+            if (e.target === document || e.target === document.body || e.target === document.documentElement) {
+                e.preventDefault();
+                resetScroll();
+            }
+        };
+
+        // Check immediately
+        resetScroll();
+
+        // Prevent scroll at capture phase (earliest possible)
+        window.addEventListener('scroll', preventScroll, { capture: true, passive: false });
+        document.addEventListener('scroll', preventScroll, { capture: true, passive: false });
+
+        // High-frequency polling to catch any scroll that slips through (60fps)
+        const interval = setInterval(resetScroll, 16);
+
+        return () => {
+            window.removeEventListener('scroll', preventScroll, { capture: true });
+            document.removeEventListener('scroll', preventScroll, { capture: true });
+            clearInterval(interval);
+        };
+    }, [isKeyboardOpen]);
+
+    // DIAGNOSTIC: Log element positions to detect what's animating
+    useEffect(() => {
+        if (!isKeyboardOpen) return;
+
+        const logPositions = (label: string) => {
+            const chatContainer = document.querySelector('[data-chat-container]');
+            const header = document.querySelector('[data-chat-header]');
+            const input = document.querySelector('[data-chat-input]');
+            const rootContainer = document.body;
+
+            const getElementInfo = (el: Element | null, name: string) => {
+                if (!el) return { [name]: 'NOT_FOUND' };
+                const rect = el.getBoundingClientRect();
+                const style = window.getComputedStyle(el);
+                return {
+                    [name]: {
+                        top: rect.top,
+                        bottom: rect.bottom,
+                        height: rect.height,
+                        transform: style.transform,
+                        transition: style.transition,
+                    }
+                };
+            };
+
+            console.log(`📍 [ELEMENT POSITIONS - ${label}]`, {
+                timestamp: new Date().toISOString(),
+                ...getElementInfo(chatContainer, 'chatContainer'),
+                ...getElementInfo(header, 'header'),
+                ...getElementInfo(input, 'input'),
+                body: {
+                    scrollTop: document.body.scrollTop,
+                    classList: Array.from(document.body.classList),
+                }
+            });
+        };
+
+        // Log immediately
+        logPositions('KEYBOARD_OPEN');
+
+        // Log at various intervals to catch animation
+        const timers = [
+            setTimeout(() => logPositions('AFTER_100ms'), 100),
+            setTimeout(() => logPositions('AFTER_300ms'), 300),
+            setTimeout(() => logPositions('AFTER_500ms'), 500),
+            setTimeout(() => logPositions('AFTER_800ms'), 800),
+            setTimeout(() => logPositions('AFTER_1000ms'), 1000),
+            setTimeout(() => logPositions('AFTER_1500ms'), 1500),
+        ];
+
+        return () => timers.forEach(t => clearTimeout(t));
+    }, [isKeyboardOpen]);
 
     useEffect(() => {
         // Fetch chat history
@@ -131,12 +259,30 @@ export function ChatInterface({ avatar, onBack, initData }: ChatInterfaceProps) 
     };
 
     return (
-        <div className="w-full h-full relative overflow-hidden flex flex-col" style={{
-            height: 'var(--tg-viewport-height, 100vh)',
-            maxHeight: 'var(--tg-viewport-height, 100vh)'
-        }}>
+        <div
+            data-chat-container
+            className={`flex flex-col chat-interface ${isKeyboardOpen ? 'keyboard-open' : ''}`}
+            style={{
+                // CRITICAL: When keyboard is open, use INITIAL height to prevent container from shrinking
+                // This keeps header and content at their original positions
+                height: isKeyboardOpen && initialViewportHeightRef.current > 0
+                    ? `${initialViewportHeightRef.current}px`
+                    : 'var(--tg-viewport-height, 100vh)',
+                maxHeight: isKeyboardOpen && initialViewportHeightRef.current > 0
+                    ? `${initialViewportHeightRef.current}px`
+                    : 'var(--tg-viewport-height, 100vh)',
+                overflow: 'hidden',
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                zIndex: 50,
+                // CRITICAL: Disable transition when keyboard is open to prevent header animation
+                transition: isKeyboardOpen ? 'none' : undefined,
+            }}
+        >
             {/* Fixed Background Color - Layer 0 */}
-            <div className="fixed inset-0 bg-[#100024] z-0" />
+            {/* REMOVED: Using Page.tsx background */}
 
             {/* Header - In flex flow, Layer 20 */}
             {/* 
@@ -151,15 +297,27 @@ export function ChatInterface({ avatar, onBack, initData }: ChatInterfaceProps) 
                 Expected total: ~90px on iOS (44px device + 46px Telegram)
             */}
             <div
-                className="w-full flex items-center justify-between z-20 backdrop-blur-md transition-all duration-[600ms] shrink-0 rounded-bl-[24px] rounded-br-[24px]"
+                data-chat-header
+                data-fixed-during-keyboard
+                className="w-full flex items-center justify-between z-20 backdrop-blur-md shrink-0 rounded-bl-[24px] rounded-br-[24px]"
                 style={{
-                    paddingTop: 'calc(var(--tg-safe-area-inset-top, 44px) + var(--tg-content-safe-area-inset-top, 46px))',
-                    paddingBottom: '16px',
-                    paddingLeft: '24px',
-                    paddingRight: '24px',
+                    // CRITICAL: Use fixed positioning when keyboard is open to prevent iOS viewport animation
+                    position: isKeyboardOpen ? 'fixed' : 'relative',
+                    top: isKeyboardOpen ? 0 : undefined,
+                    left: isKeyboardOpen ? 0 : undefined,
+                    right: isKeyboardOpen ? 0 : undefined,
+                    paddingTop: '93px', // Fixed: 47px (safe-area) + 46px (content-safe-area)
+                    paddingBottom: '12px',
+                    paddingLeft: '16px',
+                    paddingRight: '16px',
                     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                    opacity: isMounted ? 1 : 0,
-                    transitionTimingFunction: 'cubic-bezier(0.4, 0.0, 0.2, 1)'
+                    opacity: isMounted && !isExiting ? 1 : 0,
+                    transform: isExiting ? 'translateY(-100%)' : (isMounted ? 'translateY(0)' : 'translateY(-20px)'),
+                    willChange: 'opacity, transform',
+                    // Disable transitions during keyboard events to prevent UI jump
+                    transition: isKeyboardOpen
+                        ? 'none'
+                        : 'opacity 600ms cubic-bezier(0.4,0,0.2,1), transform 600ms cubic-bezier(0.4,0,0.2,1)',
                 }}
             >
                 <span className="font-semibold text-lg text-white">Элис</span>
@@ -190,36 +348,7 @@ export function ChatInterface({ avatar, onBack, initData }: ChatInterfaceProps) 
             </div>
 
 
-            {/* Background Image Layer - Fixed, ends at input top (z-1) */}
-            <div
-                className="fixed z-[1] flex items-end justify-center"
-                style={{
-                    // Top offset = header safe areas + header padding + header content
-                    top: 'calc(var(--tg-safe-area-inset-top, 44px) + var(--tg-content-safe-area-inset-top, 46px) + 56px)',
-                    left: 0,
-                    right: 0,
-                    // Bottom offset = input padding + input height + safe area
-                    bottom: 'calc(85px + max(var(--tg-safe-area-inset-bottom, 0px), var(--tg-content-safe-area-inset-bottom, 34px)))',
-                }}
-            >
-                <div
-                    className="relative"
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        opacity: isMounted ? 0.15 : 0,
-                        transform: isMounted ? 'translateY(0) scale(1.05)' : 'translateY(100px) scale(1.1)',
-                        transition: 'all 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-                        willChange: 'opacity, transform',
-                    }}
-                >
-                    <img
-                        className="w-full h-full object-contain"
-                        src={avatar.bgImage}
-                        alt=""
-                    />
-                </div>
-            </div>
+            {/* Background Image Layer - REMOVED */}
 
             {/* Bottom Gradient Shadow - Fixed (z-2) */}
             <div
@@ -227,7 +356,7 @@ export function ChatInterface({ avatar, onBack, initData }: ChatInterfaceProps) 
                 style={{
                     // Gradient height should match space between content and input
                     height: 'calc(85px + max(var(--tg-safe-area-inset-bottom, 0px), var(--tg-content-safe-area-inset-bottom, 34px)))',
-                    opacity: isMounted ? 0.95 : 0,
+                    opacity: isMounted && !isExiting ? 0.95 : 0,
                     transition: 'opacity 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
                 }}
             />
@@ -237,13 +366,20 @@ export function ChatInterface({ avatar, onBack, initData }: ChatInterfaceProps) 
                 <BounceEffect
                     className="h-full"
                 >
-                    <div className="px-4 py-4 space-y-3 flex flex-col min-h-full justify-end">
+                    <div
+                        className="px-4 py-4 space-y-3 flex flex-col min-h-full justify-end"
+                        style={{
+                            paddingBottom: 'calc(85px + max(var(--tg-safe-area-inset-bottom, 0px), var(--tg-content-safe-area-inset-bottom, 34px)))'
+                        }}
+                    >
                         {messages.map((msg) => (
                             <div
                                 key={msg.id}
                                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} transition-opacity duration-300`}
                                 style={{
-                                    animation: 'fadeIn 0.3s ease-out'
+                                    animation: 'fadeIn 0.3s ease-out',
+                                    opacity: isExiting ? 0 : 1,
+                                    transition: 'opacity 300ms ease-out'
                                 }}
                             >
                                 <div
@@ -281,46 +417,114 @@ export function ChatInterface({ avatar, onBack, initData }: ChatInterfaceProps) 
                 </BounceEffect>
             </div>
 
-            {/* Input Area Wrapper - Transitions from fixed to flex */}
+            {/* Input Area Wrapper - Fixed positioning for smooth keyboard interaction */}
             <div
-                className="w-full shrink-0 relative z-20"
+                className="w-full shrink-0 fixed z-20"
                 style={{
-                    position: isAnimationComplete ? 'static' : 'fixed',
-                    bottom: isAnimationComplete ? 'auto' : 0,
-                    left: isAnimationComplete ? 'auto' : 0,
-                    right: isAnimationComplete ? 'auto' : 0,
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
                 }}
             >
+                {/* Input Area - Layer 2 */}
                 <div
-                    className="w-full backdrop-blur-md transition-all duration-[600ms] rounded-tl-[24px] rounded-tr-[24px]"
+                    data-input-area
+                    className="w-full backdrop-blur-md rounded-tl-[24px] rounded-tr-[24px]"
                     style={{
                         backgroundColor: 'rgba(255, 255, 255, 0.05)',
                         paddingTop: '16px',
                         paddingBottom: 'calc(max(var(--tg-safe-area-inset-bottom, 0px), var(--tg-content-safe-area-inset-bottom, 34px)) + 12px)',
                         paddingLeft: '16px',
                         paddingRight: '16px',
-                        transform: isAnimationComplete ? 'none' : (isMounted ? 'translateY(0)' : 'translateY(100%)'),
-                        willChange: isAnimationComplete ? 'auto' : 'transform',
-                        transitionTimingFunction: 'cubic-bezier(0.4, 0.0, 0.2, 1)'
+                        // Force no transform when keyboard is open
+                        transform: isExiting || isKeyboardOpen
+                            ? 'translateY(0)'
+                            : (isMounted ? 'translateY(0)' : 'translateY(100%)'),
+                        willChange: 'transform',
+                        // Completely disable transitions during keyboard events
+                        transition: isKeyboardOpen || isExiting ? 'none' : 'transform 600ms cubic-bezier(0.4, 0.0, 0.2, 1)'
                     }}
                 >
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center" style={{ gap: '8px' }}>
                         <input
+                            data-chat-input
                             ref={inputRef}
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                             placeholder="Type a message..."
-                            className="flex-1 rounded-full px-5 py-3 focus:outline-none backdrop-blur-[15px] transition-all duration-200 text-white placeholder-white/40"
+                            className={`flex-1 rounded-full px-5 py-3 focus:outline-none backdrop-blur-[15px] text-white placeholder-white/40 ${isKeyboardOpen ? '' : 'transition-all duration-200'}`}
                             style={{
                                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
                             }}
                             onFocus={(e) => {
-                                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+                                // CRITICAL: Add class IMMEDIATELY via DOM to disable transitions
+                                // This works INSTANTLY, without waiting for React re-render
+                                document.body.classList.add('keyboard-active');
+
+                                // Disable transition on chat container to prevent header animation
+                                const chatContainer = document.querySelector('[data-chat-container]') as HTMLElement;
+                                if (chatContainer) {
+                                    chatContainer.style.transition = 'none';
+                                }
+
+                                // Also disable transition on parent input-area container
+                                const inputArea = e.currentTarget.closest('[data-input-area]') as HTMLElement;
+                                if (inputArea) {
+                                    inputArea.style.transition = 'none';
+                                }
+
+                                // IMMEDIATELY notify parent to disable transitions (React state backup)
+                                onInputFocusChange?.(true);
+
+                                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+
+                                // AGGRESSIVE iOS scroll prevention
+                                // iOS scrolls the page automatically when focusing on input
+                                // We need to counter this BEFORE it happens visually
+
+                                // Immediate sync reset
+                                window.scrollTo(0, 0);
+
+                                // Prevent default iOS behavior by locking scroll during focus transition
+                                document.body.style.overflow = 'hidden';
+                                document.documentElement.style.overflow = 'hidden';
+
+                                // Multiple RAF frames to catch iOS scroll at different stages
+                                const resetScroll = () => {
+                                    window.scrollTo(0, 0);
+                                    document.body.scrollTop = 0;
+                                    document.documentElement.scrollTop = 0;
+                                };
+
+                                // Chain of RAF to catch all possible scroll moments
+                                resetScroll();
+                                requestAnimationFrame(() => {
+                                    resetScroll();
+                                    requestAnimationFrame(() => {
+                                        resetScroll();
+                                        requestAnimationFrame(() => {
+                                            resetScroll();
+                                            // Additional delayed resets for iOS keyboard animation
+                                            setTimeout(resetScroll, 0);
+                                            setTimeout(resetScroll, 16);
+                                            setTimeout(resetScroll, 50);
+                                            setTimeout(resetScroll, 100);
+                                            setTimeout(resetScroll, 150);
+                                            setTimeout(resetScroll, 200);
+                                        });
+                                    });
+                                });
                             }}
                             onBlur={(e) => {
                                 e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                                // Notify parent that input lost focus
+                                onInputFocusChange?.(false);
+                                // Remove keyboard-active class after a delay to allow closing animation
+                                setTimeout(() => {
+                                    document.body.classList.remove('keyboard-active');
+                                }, 100);
                             }}
                         />
                         <button
@@ -340,6 +544,45 @@ export function ChatInterface({ avatar, onBack, initData }: ChatInterfaceProps) 
                     </div>
                 </div>
             </div>
+
+            {/* Debug Tools - Copy Logs Button */}
+            {isDev && (
+                <div className="fixed bottom-24 right-4 z-[100] flex flex-col gap-2">
+                    <button
+                        onClick={async () => {
+                            const success = await copyLogs();
+                            if (success) {
+                                notification('success');
+                            } else {
+                                notification('error');
+                            }
+                        }}
+                        className="bg-blue-500 text-white rounded-full p-4 shadow-lg active:scale-95 transition-transform"
+                        style={{ backgroundColor: 'rgba(59, 130, 246, 0.95)' }}
+                    >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 5H6C5.46957 5 4.96086 5.21071 4.58579 5.58579C4.21071 5.96086 4 6.46957 4 7V19C4 19.5304 4.21071 20.0391 4.58579 20.4142C4.96086 20.7893 5.46957 21 6 21H16C16.5304 21 17.0391 20.7893 17.4142 20.4142C17.7893 20.0391 18 19.5304 18 19V18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M8 5C8 4.46957 8.21071 3.96086 8.58579 3.58579C8.96086 3.21071 9.46957 3 10 3H18C18.5304 3 19.0391 3.21071 19.4142 3.58579C19.7893 3.96086 20 4.46957 20 5V15C20 15.5304 19.7893 16.0391 19.4142 16.4142C19.0391 16.7893 18.5304 17 18 17H10C9.46957 17 8.96086 16.7893 8.58579 16.4142C8.21071 16.0391 8 15.5304 8 15V5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1">
+                            {logsCount}
+                        </span>
+                    </button>
+                    <button
+                        onClick={() => {
+                            clearLogs();
+                            selection();
+                        }}
+                        className="bg-red-500 text-white rounded-full p-4 shadow-lg active:scale-95 transition-transform"
+                        style={{ backgroundColor: 'rgba(239, 68, 68, 0.95)' }}
+                    >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 6H5H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+            )}
 
             <style jsx>{`
                 @keyframes fadeIn {

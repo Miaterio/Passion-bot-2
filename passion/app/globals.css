@@ -20,6 +20,19 @@
   }
 }
 
+/* ⚡ Критичные стили для Telegram Mini App */
+html {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  height: var(--tg-viewport-height, 100vh);
+  /* Блокировка iOS overscroll */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
@@ -27,12 +40,15 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-}
-
-html {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
+  /* Привязка к viewport */
+  height: var(--tg-viewport-height, 100vh);
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  /* Блокировка скролла iOS */
+  overscroll-behavior: none;
+  touch-action: pan-x pan-y;
 }
 
 /* Telegram Mini App CSS Variables */
@@ -40,3 +56,38 @@ html {
 /* --tg-viewport-height, --tg-viewport-width, --tg-viewport-stable-height */
 /* --tg-content-safe-area-inset-top, --tg-content-safe-area-inset-bottom */
 /* --tg-content-safe-area-inset-left, --tg-content-safe-area-inset-right */
+
+/* CRITICAL: Force disable ALL transitions when keyboard is active */
+/* This class is added via direct DOM manipulation in onFocus for INSTANT effect */
+/* without waiting for React re-render (which takes 15-20ms and allows transitions to start) */
+body.keyboard-active,
+body.keyboard-active *,
+body.keyboard-active *::before,
+body.keyboard-active *::after {
+  transition: none !important;
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+  animation: none !important;
+  animation-duration: 0s !important;
+}
+
+/* CRITICAL: CSS-only height lock for keyboard events */
+/* Use --tg-initial-height (set once on page load) instead of dynamic --tg-viewport-height */
+/* This ensures height is locked BEFORE React state updates (eliminates 508px→844px animation) */
+body.keyboard-active {
+  height: var(--tg-initial-height, 100vh) !important;
+}
+
+/* Lock the main containers to initial height during keyboard */
+body.keyboard-active [data-chat-container],
+body.keyboard-active [data-root-container] {
+  height: var(--tg-initial-height, 100vh) !important;
+  max-height: var(--tg-initial-height, 100vh) !important;
+}
+
+/* Lock fixed elements to prevent iOS viewport animation */
+/* Use the offset calculated by useVisualViewportFix hook */
+body.keyboard-active [data-fixed-during-keyboard] {
+  transform: translateY(var(--visual-viewport-offset, 0px)) !important;
+  transition: none !important;
+}

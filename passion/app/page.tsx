@@ -84,10 +84,25 @@ export default function Page() {
   const [chatMode, setChatMode] = React.useState(false);
   const [selectedAvatar, setSelectedAvatar] = React.useState<Avatar>(AVATARS[0]);
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
+  const [isChatExiting, setIsChatExiting] = React.useState(false);
   const [chatKey, setChatKey] = React.useState(0); // Key to force ChatInterface remount
+  const [isKeyboardOpen, setIsKeyboardOpen] = React.useState(false); // Track keyboard state from ChatInterface
+  const [isInputFocused, setIsInputFocused] = React.useState(false); // Track input focus for IMMEDIATE transition disable
+
+  // Disable transitions when EITHER input is focused OR keyboard is open
+  // This ensures transitions are disabled IMMEDIATELY on focus, before viewport changes
+  const shouldDisableTransitions = isInputFocused || isKeyboardOpen;
   const { impact, selection, notification } = useHaptic();
   const mainContentRef = React.useRef<HTMLDivElement>(null);
   const rootContainerRef = React.useRef<HTMLDivElement>(null);
+  const initialViewportHeightRef = React.useRef<number>(0);
+
+  // Capture initial viewport height on mount
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && initialViewportHeightRef.current === 0) {
+      initialViewportHeightRef.current = window.innerHeight;
+    }
+  }, []);
 
   // Safely retrieve launch params
   let initDataRaw = '';
@@ -103,14 +118,14 @@ export default function Page() {
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isAndroidDevice = /android/.test(userAgent);
     setIsAndroid(isAndroidDevice);
-    
+
     // Log parent container measurements
     const logContainerMeasurements = () => {
       const statusBarHeight = isAndroidDevice ? 0 : 44;
       const telegramUIHeight = 46;
       const androidExtraSpacing = isAndroidDevice ? 12 : 0;
       const fixedHeadersTotal = statusBarHeight + telegramUIHeight + androidExtraSpacing;
-      
+
       logLayout('PAGE', {
         'Platform': isAndroidDevice ? 'Android' : 'iOS',
         'Viewport height': `${window.innerHeight}px`,
@@ -121,20 +136,20 @@ export default function Page() {
         'Fixed headers total': `${fixedHeadersTotal}px`,
         'Expected main content': `${window.innerHeight - fixedHeadersTotal}px`,
       });
-      
+
       if (rootContainerRef.current) {
         logLayout('PAGE', {
           'Root container height': `${rootContainerRef.current.offsetHeight}px`,
         });
       }
-      
+
       if (mainContentRef.current) {
         logLayout('PAGE', {
           'Main Content height (actual)': `${mainContentRef.current.offsetHeight}px`,
           'Main Content height (expected)': `${window.innerHeight - fixedHeadersTotal}px`,
         });
       }
-      
+
       // Log safe area CSS variables
       logCSSVariables([
         '--tg-content-safe-area-inset-top',
@@ -143,11 +158,11 @@ export default function Page() {
         '--tg-content-safe-area-inset-right',
       ]);
     };
-    
+
     // Log after mount and on resize
     setTimeout(logContainerMeasurements, 100);
     window.addEventListener('resize', logContainerMeasurements);
-    
+
     return () => window.removeEventListener('resize', logContainerMeasurements);
   }, []);
 
@@ -157,7 +172,12 @@ export default function Page() {
   };
 
   const handleBack = React.useCallback(() => {
+    setIsChatExiting(true);
+  }, []);
+
+  const handleChatExitComplete = React.useCallback(() => {
     setChatMode(false);
+    setIsChatExiting(false);
   }, []);
 
   // Handle Back Button visibility and events using low-level SDK
@@ -211,29 +231,49 @@ export default function Page() {
   };
 
   return (
-    <div ref={rootContainerRef} className="w-full relative overflow-hidden flex flex-col justify-center items-start bg-[#100024]" style={{
-      height: 'var(--tg-viewport-stable-height, 100vh)',
-      maxHeight: 'var(--tg-viewport-stable-height, 100vh)'
+    <div ref={rootContainerRef} data-root-container className="w-full relative overflow-hidden flex flex-col justify-center items-start bg-[#100024]" style={{      // CRITICAL: When keyboard is open, use INITIAL height to prevent container from shrinking
+      height: shouldDisableTransitions && initialViewportHeightRef.current > 0
+        ? `${initialViewportHeightRef.current}px`
+        : 'var(--tg-viewport-height, 100vh)',
+      maxHeight: shouldDisableTransitions && initialViewportHeightRef.current > 0
+        ? `${initialViewportHeightRef.current}px`
+        : 'var(--tg-viewport-height, 100vh)'
     }}>
       {/* Fixed Background Color */}
       <div className="fixed inset-0 bg-[#100024] z-0" />
 
-      {/* Background Image Container - Bottom aligned with slider */}
-      <div className="fixed inset-0 z-[1] flex flex-col items-center justify-end">
-        {/* BG Avatar - Fullscreen when closed, fixed size when open, bottom aligned with slider top */}
+      {/* Background Image Container - use initial height when keyboard is open */}
+      <div
+        data-fixed-during-keyboard
+        className="fixed z-[1] flex flex-col items-center justify-end"
+        style={{
+          top: 0,
+          left: 0,
+          right: 0,
+          // CRITICAL: Use initial height to prevent iOS visual viewport animation
+          height: shouldDisableTransitions && initialViewportHeightRef.current > 0
+            ? `${initialViewportHeightRef.current}px`
+            : '100%',
+        }}
+      >
+        {/* BG Avatar - Fullscreen when closed, fixed size when open */}
         <div
           className="relative"
           style={{
-            width: isUserMenuOpen ? '286px' : '100%',
-            height: isUserMenuOpen ? '620px' : '100%',
-            transform: chatMode
-              ? 'translateY(100px) scale(0.9)'
-              : isUserMenuOpen
-                ? 'translateY(-280px)'
-                : 'translateY(0)',
-            opacity: chatMode ? 0 : 1,
-            transition: 'all 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-            willChange: 'width, height, transform, opacity',
+            width: isUserMenuOpen && !shouldDisableTransitions ? '286px' : '100%',
+            height: isUserMenuOpen && !shouldDisableTransitions ? '620px' : '100%',
+            // Disable transforms during keyboard to prevent any animation
+            transform: shouldDisableTransitions
+              ? 'none'
+              : (chatMode && !isChatExiting)
+                ? 'translateY(0) scale(1.05)'
+                : isUserMenuOpen
+                  ? 'translateY(-280px)'
+                  : 'translateY(0)',
+            opacity: (chatMode && !isChatExiting) ? 0.2 : 1,
+            // CRITICAL: Disable ALL transitions when keyboard is open
+            transition: shouldDisableTransitions ? 'none' : 'all 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
+            willChange: shouldDisableTransitions ? 'auto' : 'width, height, transform, opacity',
           }}
         >
           <img
@@ -249,8 +289,8 @@ export default function Page() {
           style={{
             bottom: 0,
             transform: isUserMenuOpen ? 'translateY(-280px)' : 'translateY(0)',
-            opacity: chatMode ? 0 : 1,
-            transition: 'transform 600ms cubic-bezier(0.4, 0.0, 0.2, 1), opacity 600ms',
+            opacity: (chatMode && !isChatExiting) ? 0 : 1, // Hide in chat mode (ChatInterface has its own gradient)
+            transition: shouldDisableTransitions ? 'none' : 'transform 600ms cubic-bezier(0.4, 0.0, 0.2, 1), opacity 600ms',
             willChange: 'transform, opacity',
           }}
         />
@@ -258,92 +298,138 @@ export default function Page() {
 
       {/* Placeholders removed - Telegram Mini App manages its own UI chrome */}
       {/* When not in chat mode, we still need spacing for aesthetic reasons */}
-      {!chatMode && (
-        <>
-          {/* Status Bar Placeholder - Hidden on Android, Visible on iOS */}
-          {!isAndroid && (
-            <div className="w-full h-[44px] bg-transparent z-20 shrink-0" />
-          )}
+      {
+        !chatMode && (
+          <>
+            {/* Status Bar Placeholder - Hidden on Android, Visible on iOS */}
+            {!isAndroid && (
+              <div className="w-full h-[44px] bg-transparent z-20 shrink-0" />
+            )}
 
-          {/* Telegram UI Placeholder - Visible on both */}
-          <div className="w-full h-[46px] bg-transparent z-20 shrink-0" />
+            {/* Telegram UI Placeholder - Visible on both */}
+            <div className="w-full h-[46px] bg-transparent z-20 shrink-0" />
 
-          {/* Extra spacing for Android */}
-          {isAndroid && <div className="w-full h-[12px] bg-transparent z-20 shrink-0" />}
-        </>
-      )}
+            {/* Extra spacing for Android */}
+            {isAndroid && <div className="w-full h-[12px] bg-transparent z-20 shrink-0" />}
+          </>
+        )
+      }
 
       {/* Main Content Area - Safe Area Container */}
       <div ref={mainContentRef} className="w-full flex-1 flex flex-col z-20 overflow-hidden" style={{
-        paddingBottom: chatMode ? '0px' : (isAndroid ? '46px' : '34px')
+        // Subtract fixed headers (Status Bar 44px + Telegram UI 46px = 90px on iOS)
+        // We use a CSS variable or fallback to 90px. 
+        // Note: On Android status bar is 0 here but we might need logic. 
+        // For now, let's use the safe area inset top + 44px as a proxy for total top offset if needed, 
+        // or just rely on flexbox if the parent is sized correctly?
+        // The parent is sized to viewport. This container is flex-1. 
+        // If the parent is 508px, and we have 90px of absolute/fixed headers that are NOT in the flow but visual...
+        // Wait, the headers in `page.tsx` are:
+        // 1. Status Bar Placeholder (44px) - in flow?
+        // 2. Telegram UI Placeholder (46px) - in flow?
+        // Yes, they are rendered conditionally: {!chatMode && ...}
+        // BUT in chatMode, they are NOT rendered.
+        // So in chatMode, the main content should take full height?
+        // Ah, the issue is that in ChatMode, the Telegram UI is still there visually (native), but we don't render placeholders?
+        // No, in ChatMode we want the chat to be full screen BUT respect the safe area.
+        // If we are in ChatMode, we need to subtract the top inset.
+
+        // Let's look at the recommendation:
+        // height: calc(var(--tg-viewport-height) - var(--tg-content-safe-area-inset-top) - 44px);
+
+        // If we simply set height, we might break flex. 
+        // But if the parent is fixed height, and this is flex-1, it should work?
+        // The problem is likely that the content inside is too tall.
+        // Let's try explicit height.
+
+        height: chatMode
+          ? `calc(var(--tg-viewport-height) - var(--tg-content-safe-area-inset-top) - ${isAndroid ? 0 : 44}px)`
+          : 'auto',
+
+        paddingBottom: chatMode && !isChatExiting ? '0px' : (isAndroid ? '46px' : '34px')
       }}>
 
-        {!chatMode ? (
-          <>
-            <div className="flex-1 px-4 pt-4 relative">
-              {/* Top Row - Hide when user menu open */}
-              <div
-                className="w-full flex justify-between items-center mb-4 relative z-30 transition-opacity duration-300"
-                style={{
-                  opacity: isUserMenuOpen ? 0 : 1,
-                  pointerEvents: isUserMenuOpen ? 'none' : 'auto'
-                }}
-              >
-                <Button onClick={handleClearHistory}>
-                  <BroomIcon />
-                </Button>
-                <Button onClick={() => impact('light')}>
-                  <FlashIcon />
-                </Button>
-              </div>
-
-              {/* Avatar Slider Container - Slides up from bottom */}
-              <div
-                className="fixed bottom-0 left-0 w-full z-30"
-                style={{
-                  transform: isUserMenuOpen ? 'translateY(0)' : 'translateY(100%)',
-                  transition: 'transform 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
-                  willChange: 'transform',
-                }}
-              >
-                <AvatarSlider
-                  selectedAvatar={selectedAvatar}
-                  onSelect={handleAvatarSelect}
-                  onClose={toggleUserMenu}
-                />
-              </div>
-            </div>
-
-            {/* Bottom Row - Hide when user menu open */}
+        {/* Menu - Always rendered, controlled by opacity */}
+        <div
+          className={`w-full flex-1 flex flex-col absolute ${shouldDisableTransitions ? '' : 'transition-opacity duration-[600ms]'}`}
+          style={{
+            top: isAndroid ? '58px' : '90px', // Android: 46px Telegram UI + 12px spacing, iOS: 44px status + 46px Telegram UI
+            left: 0,
+            right: 0,
+            bottom: isAndroid ? '46px' : '34px',
+            opacity: chatMode && !isChatExiting ? 0 : 1,
+            pointerEvents: chatMode && !isChatExiting ? 'none' : 'auto',
+            zIndex: 20
+          }}
+        >
+          <div className="flex-1 px-4 pt-4 relative">
+            {/* Top Row - Hide when user menu open */}
             <div
-              className="w-full flex justify-between items-center px-4 pt-4 shrink-0 relative z-40 transition-opacity duration-300"
+              className="w-full flex justify-between items-center mb-4 relative z-30 transition-opacity duration-300"
               style={{
                 opacity: isUserMenuOpen ? 0 : 1,
                 pointerEvents: isUserMenuOpen ? 'none' : 'auto'
               }}
             >
-              <Button active={!isUserMenuOpen} onClick={() => impact('light')}>
-                <HomeIcon />
-              </Button>
-              <Button onClick={() => {
-                impact('light');
-                setChatMode(true);
-              }}>
-                <ToggleIcon />
+              <Button onClick={handleClearHistory}>
+                <BroomIcon />
               </Button>
               <Button onClick={() => impact('light')}>
-                <SettingIcon />
-              </Button>
-              <Button active={isUserMenuOpen} onClick={toggleUserMenu}>
-                <UserIcon />
+                <FlashIcon />
               </Button>
             </div>
-          </>
-        ) : (
-          <div 
-            className="w-full h-full"
+
+            {/* Avatar Slider Container - Slides up from bottom */}
+            <div
+              className="fixed bottom-0 left-0 w-full z-30"
+              style={{
+                transform: isUserMenuOpen ? 'translateY(0)' : 'translateY(100%)',
+                transition: shouldDisableTransitions ? 'none' : 'transform 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
+                willChange: 'transform',
+              }}
+            >
+              <AvatarSlider
+                selectedAvatar={selectedAvatar}
+                onSelect={handleAvatarSelect}
+                onClose={toggleUserMenu}
+              />
+            </div>
+          </div>
+
+          {/* Bottom Row - Hide when user menu open */}
+          <div
+            className="w-full flex justify-between items-center px-4 pt-4 shrink-0 relative z-40 transition-opacity duration-300"
             style={{
-              animation: 'chatFadeIn 0.6s cubic-bezier(0.4, 0.0, 0.2, 1)'
+              opacity: isUserMenuOpen ? 0 : 1,
+              pointerEvents: isUserMenuOpen ? 'none' : 'auto'
+            }}
+          >
+            <Button active={!isUserMenuOpen} onClick={() => impact('light')}>
+              <HomeIcon />
+            </Button>
+            <Button onClick={() => {
+              impact('light');
+              setChatMode(true);
+            }}>
+              <ToggleIcon />
+            </Button>
+            <Button onClick={() => impact('light')}>
+              <SettingIcon />
+            </Button>
+            <Button active={isUserMenuOpen} onClick={toggleUserMenu}>
+              <UserIcon />
+            </Button>
+          </div>
+        </div>
+
+        {/* Chat - Always rendered when in chat mode, controlled by opacity */}
+        {chatMode && (
+          <div
+            className="w-full h-full absolute inset-0"
+            style={{
+              opacity: isChatExiting ? 0 : 1,
+              transition: shouldDisableTransitions ? 'none' : 'opacity 600ms cubic-bezier(0.4, 0.0, 0.2, 1)',
+              zIndex: 30
             }}
           >
             <ChatInterface
@@ -351,6 +437,10 @@ export default function Page() {
               avatar={selectedAvatar}
               onBack={handleBack}
               initData={initDataRaw}
+              isExiting={isChatExiting}
+              onExitComplete={handleChatExitComplete}
+              onKeyboardChange={setIsKeyboardOpen}
+              onInputFocusChange={setIsInputFocused}
             />
           </div>
         )}
@@ -367,6 +457,6 @@ export default function Page() {
         }
       `}</style>
 
-    </div>
+    </div >
   );
 }

@@ -1,0 +1,1003 @@
+[2025-12-05T00:13:37.730Z] LOG: 📥 Fetching chat history for avatar: flirty
+[2025-12-05T00:13:37.730Z] LOG: 🔧 [DIAGNOSTICS] Keyboard diagnostics cleaned up
+[2025-12-05T00:13:37.730Z] LOG: 📥 Fetching chat history for avatar: flirty
+[2025-12-05T00:13:37.732Z] LOG: ⌨️ [KEYBOARD STATE] {
+  "isKeyboardOpen": false,
+  "isInputFocused": false,
+  "viewportHeight": 844,
+  "initialHeight": 844,
+  "heightRatio": "1.00"
+}
+[2025-12-05T00:13:37.734Z] LOG: [Telegram.WebView] < receiveEvent viewport_changed {
+  "height": 844,
+  "is_expanded": true,
+  "is_state_stable": true
+}
+[2025-12-05T00:13:37.734Z] LOG: 📊 [VIEWPORT CHANGE EVENT] {
+  "sdkHeight": 844,
+  "windowHeight": 844,
+  "using": 844
+}
+[2025-12-05T00:13:37.734Z] LOG: [Telegram.WebView] < receiveEvent safe_area_changed {
+  "top": 47,
+  "bottom": 34,
+  "left": 0,
+  "right": 0
+}
+[2025-12-05T00:13:37.734Z] LOG: 🔍 CONTENT SAFE AREA INSETS FROM SDK: {
+  "left": 0,
+  "bottom": 0,
+  "top": 46,
+  "right": 0
+}
+[2025-12-05T00:13:37.734Z] LOG: 📊 Breakdown: {
+  "top": "46px (should include Telegram UI ~46px)",
+  "bottom": "0px",
+  "left": "0px",
+  "right": "0px"
+}
+[2025-12-05T00:13:37.734Z] LOG: ✅ Safe area CSS variables bound: {
+  "left": 0,
+  "bottom": 0,
+  "top": 46,
+  "right": 0
+}
+[2025-12-05T00:13:37.734Z] LOG: [Telegram.WebView] < receiveEvent content_safe_area_changed {
+  "left": 0,
+  "bottom": 0,
+  "top": 46,
+  "right": 0
+}
+[2025-12-05T00:13:37.818Z] LOG: 📥 Chat history response status: 200 Time: 105 ms
+[2025-12-05T00:13:37.818Z] LOG: 📥 Loaded messages: 0
+[2025-12-05T00:13:37.845Z] LOG: 📥 Chat history response status: 200 Time: 126 ms
+[2025-12-05T00:13:37.845Z] LOG: 📥 Loaded messages: 0
+[2025-12-05T00:13:38.737Z] LOG: ⌨️ [INPUT FOCUS] {
+  "tagName": "INPUT",
+  "type": "text"
+}
+[2025-12-05T00:13:38.751Z] LOG: ⌨️ [KEYBOARD STATE] {
+  "isKeyboardOpen": false,
+  "isInputFocused": true,
+  "viewportHeight": 844,
+  "initialHeight": 844,
+  "heightRatio": "1.00"
+}
+[2025-12-05T00:13:38.787Z] LOG: 📊 [VIEWPORT - FOCUS+50ms] {
+  "label": "FOCUS+50ms",
+  "timestamp": "2025-12-05T00:13:38.787Z",
+  "window": {
+    "innerHeight": 844,
+    "innerWidth": 390,
+    "scrollY": 0,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "844px",
+    "viewportHeight": "844px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "34px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:38.817Z] LOG: [Telegram.WebView] < receiveEvent viewport_changed {
+  "height": 508,
+  "is_expanded": true,
+  "is_state_stable": true
+}
+[2025-12-05T00:13:38.817Z] LOG: 📊 [VIEWPORT CHANGE EVENT] {
+  "sdkHeight": 508,
+  "windowHeight": 844,
+  "using": 508
+}
+[2025-12-05T00:13:38.817Z] LOG: 🎨 [STYLE MUTATION]
+[2025-12-05T00:13:38.817Z] LOG: 📊 [VIEWPORT - MUTATION] {
+  "label": "MUTATION",
+  "timestamp": "2025-12-05T00:13:38.804Z",
+  "window": {
+    "innerHeight": 844,
+    "innerWidth": 390,
+    "scrollY": 0,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "34px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:38.817Z] LOG: 🎨 [STYLE MUTATION]
+[2025-12-05T00:13:38.817Z] LOG: 📊 [VIEWPORT - MUTATION] {
+  "label": "MUTATION",
+  "timestamp": "2025-12-05T00:13:38.807Z",
+  "window": {
+    "innerHeight": 844,
+    "innerWidth": 390,
+    "scrollY": 0,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "34px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:38.817Z] LOG: [Telegram.WebView] < receiveEvent safe_area_changed {
+  "top": 47,
+  "bottom": 0,
+  "left": 0,
+  "right": 0
+}
+[2025-12-05T00:13:38.817Z] LOG: 🎨 [STYLE MUTATION]
+[2025-12-05T00:13:38.817Z] LOG: 📊 [VIEWPORT - MUTATION] {
+  "label": "MUTATION",
+  "timestamp": "2025-12-05T00:13:38.808Z",
+  "window": {
+    "innerHeight": 844,
+    "innerWidth": 390,
+    "scrollY": 0,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "0px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:38.817Z] LOG: 🎨 [STYLE MUTATION]
+[2025-12-05T00:13:38.817Z] LOG: 📊 [VIEWPORT - MUTATION] {
+  "label": "MUTATION",
+  "timestamp": "2025-12-05T00:13:38.811Z",
+  "window": {
+    "innerHeight": 844,
+    "innerWidth": 390,
+    "scrollY": 0,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "0px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:38.817Z] LOG: 🔍 CONTENT SAFE AREA INSETS FROM SDK: {
+  "right": 0,
+  "left": 0,
+  "bottom": 0,
+  "top": 46
+}
+[2025-12-05T00:13:38.817Z] LOG: 📊 Breakdown: {
+  "top": "46px (should include Telegram UI ~46px)",
+  "bottom": "0px",
+  "left": "0px",
+  "right": "0px"
+}
+[2025-12-05T00:13:38.817Z] LOG: ✅ Safe area CSS variables bound: {
+  "right": 0,
+  "left": 0,
+  "bottom": 0,
+  "top": 46
+}
+[2025-12-05T00:13:38.817Z] LOG: [Telegram.WebView] < receiveEvent content_safe_area_changed {
+  "right": 0,
+  "left": 0,
+  "bottom": 0,
+  "top": 46
+}
+[2025-12-05T00:13:38.819Z] LOG: ⌨️ [KEYBOARD STATE] {
+  "isKeyboardOpen": true,
+  "isInputFocused": true,
+  "viewportHeight": 508,
+  "initialHeight": 844,
+  "heightRatio": "0.60"
+}
+[2025-12-05T00:13:38.819Z] LOG: 📍 [ELEMENT POSITIONS - KEYBOARD_OPEN] {
+  "timestamp": "2025-12-05T00:13:38.818Z",
+  "chatContainer": {
+    "top": 0,
+    "bottom": 844,
+    "height": 844,
+    "transform": "none",
+    "transition": "none"
+  },
+  "header": {
+    "top": 0,
+    "bottom": 137,
+    "height": 137,
+    "transform": "none",
+    "transition": "none"
+  },
+  "input": {
+    "top": 788,
+    "bottom": 832,
+    "height": 44,
+    "transform": "none",
+    "transition": "none"
+  },
+  "body": {
+    "scrollTop": 0,
+    "classList": [
+      "geist_a71539c9-module__T19VSG__variable",
+      "geist_mono_8d43a2aa-module__8Li5zG__variable",
+      "antialiased",
+      "keyboard-active"
+    ]
+  }
+}
+[2025-12-05T00:13:38.919Z] LOG: 📍 [ELEMENT POSITIONS - AFTER_100ms] {
+  "timestamp": "2025-12-05T00:13:38.919Z",
+  "chatContainer": {
+    "top": 0,
+    "bottom": 844,
+    "height": 844,
+    "transform": "none",
+    "transition": "none"
+  },
+  "header": {
+    "top": 0,
+    "bottom": 137,
+    "height": 137,
+    "transform": "none",
+    "transition": "none"
+  },
+  "input": {
+    "top": 788,
+    "bottom": 832,
+    "height": 44,
+    "transform": "none",
+    "transition": "none"
+  },
+  "body": {
+    "scrollTop": 0,
+    "classList": [
+      "geist_a71539c9-module__T19VSG__variable",
+      "geist_mono_8d43a2aa-module__8Li5zG__variable",
+      "antialiased",
+      "keyboard-active"
+    ]
+  }
+}
+[2025-12-05T00:13:38.937Z] LOG: 📊 [VIEWPORT - FOCUS+200ms] {
+  "label": "FOCUS+200ms",
+  "timestamp": "2025-12-05T00:13:38.937Z",
+  "window": {
+    "innerHeight": 844,
+    "innerWidth": 390,
+    "scrollY": 0,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "0px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:39.121Z] LOG: 📍 [ELEMENT POSITIONS - AFTER_300ms] {
+  "timestamp": "2025-12-05T00:13:39.119Z",
+  "chatContainer": {
+    "top": 0,
+    "bottom": 844,
+    "height": 844,
+    "transform": "none",
+    "transition": "none"
+  },
+  "header": {
+    "top": 0,
+    "bottom": 137,
+    "height": 137,
+    "transform": "none",
+    "transition": "none"
+  },
+  "input": {
+    "top": 788,
+    "bottom": 832,
+    "height": 44,
+    "transform": "none",
+    "transition": "none"
+  },
+  "body": {
+    "scrollTop": 0,
+    "classList": [
+      "geist_a71539c9-module__T19VSG__variable",
+      "geist_mono_8d43a2aa-module__8Li5zG__variable",
+      "antialiased",
+      "keyboard-active"
+    ]
+  }
+}
+[2025-12-05T00:13:39.247Z] LOG: 📊 [VIEWPORT - FOCUS+500ms] {
+  "label": "FOCUS+500ms",
+  "timestamp": "2025-12-05T00:13:39.245Z",
+  "window": {
+    "innerHeight": 844,
+    "innerWidth": 390,
+    "scrollY": 0,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "0px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:39.247Z] LOG:   Platform: iOS
+[2025-12-05T00:13:39.247Z] LOG:   Viewport height: 508px
+[2025-12-05T00:13:39.247Z] LOG:   Viewport width: 390px
+[2025-12-05T00:13:39.247Z] LOG:   Status bar: 44px
+[2025-12-05T00:13:39.247Z] LOG:   Telegram UI: 46px
+[2025-12-05T00:13:39.247Z] LOG:   Android spacing: 0px
+[2025-12-05T00:13:39.247Z] LOG:   Fixed headers total: 90px
+[2025-12-05T00:13:39.247Z] LOG:   Expected main content: 418px
+[2025-12-05T00:13:39.247Z] LOG:   Root container height: 844px
+[2025-12-05T00:13:39.247Z] LOG:   Main Content height (actual): 844px
+[2025-12-05T00:13:39.247Z] LOG:   Main Content height (expected): 418px
+[2025-12-05T00:13:39.247Z] LOG:   --tg-content-safe-area-inset-top: 46px
+[2025-12-05T00:13:39.247Z] LOG:   --tg-content-safe-area-inset-bottom: 0px
+[2025-12-05T00:13:39.247Z] LOG:   --tg-content-safe-area-inset-left: 0px
+[2025-12-05T00:13:39.247Z] LOG:   --tg-content-safe-area-inset-right: 0px
+[2025-12-05T00:13:39.257Z] LOG: 📐 [RESIZE EVENT]
+[2025-12-05T00:13:39.257Z] LOG: 📊 [VIEWPORT - RESIZE] {
+  "label": "RESIZE",
+  "timestamp": "2025-12-05T00:13:39.256Z",
+  "window": {
+    "innerHeight": 508,
+    "innerWidth": 390,
+    "scrollY": 336,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "0px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:39.265Z] LOG: 📱 [VISUAL VIEWPORT] {
+  "height": 508,
+  "width": 390,
+  "offsetTop": 336,
+  "scale": 1
+}
+[2025-12-05T00:13:39.265Z] LOG: 🎨 [STYLE MUTATION]
+[2025-12-05T00:13:39.265Z] LOG: 📊 [VIEWPORT - MUTATION] {
+  "label": "MUTATION",
+  "timestamp": "2025-12-05T00:13:39.265Z",
+  "window": {
+    "innerHeight": 508,
+    "innerWidth": 390,
+    "scrollY": 336,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "0px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:39.277Z] LOG: 📜 [SCROLL EVENT] {
+  "target": "window",
+  "scrollY": 336,
+  "scrollX": 0
+}
+[2025-12-05T00:13:39.277Z] LOG: 📊 [VIEWPORT - SCROLL] {
+  "label": "SCROLL",
+  "timestamp": "2025-12-05T00:13:39.267Z",
+  "window": {
+    "innerHeight": 508,
+    "innerWidth": 390,
+    "scrollY": 336,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "0px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:39.277Z] LOG: 📜 [SCROLL EVENT] {
+  "target": "window",
+  "scrollY": 0,
+  "scrollX": 0
+}
+[2025-12-05T00:13:39.277Z] LOG: 📊 [VIEWPORT - SCROLL] {
+  "label": "SCROLL",
+  "timestamp": "2025-12-05T00:13:39.267Z",
+  "window": {
+    "innerHeight": 508,
+    "innerWidth": 390,
+    "scrollY": 0,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "0px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:39.277Z] LOG: 📱 [VISUAL VIEWPORT] {
+  "height": 508,
+  "width": 390,
+  "offsetTop": 0,
+  "scale": 1
+}
+[2025-12-05T00:13:39.277Z] LOG: 🎨 [STYLE MUTATION]
+[2025-12-05T00:13:39.277Z] LOG: 📊 [VIEWPORT - MUTATION] {
+  "label": "MUTATION",
+  "timestamp": "2025-12-05T00:13:39.273Z",
+  "window": {
+    "innerHeight": 508,
+    "innerWidth": 390,
+    "scrollY": 0,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "0px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:39.289Z] LOG: 📜 [SCROLL EVENT] {
+  "target": "window",
+  "scrollY": 336,
+  "scrollX": 0
+}
+[2025-12-05T00:13:39.289Z] LOG: 📊 [VIEWPORT - SCROLL] {
+  "label": "SCROLL",
+  "timestamp": "2025-12-05T00:13:39.287Z",
+  "window": {
+    "innerHeight": 508,
+    "innerWidth": 390,
+    "scrollY": 336,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "0px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:39.289Z] LOG: 📜 [SCROLL EVENT] {
+  "target": "window",
+  "scrollY": 0,
+  "scrollX": 0
+}
+[2025-12-05T00:13:39.289Z] LOG: 📊 [VIEWPORT - SCROLL] {
+  "label": "SCROLL",
+  "timestamp": "2025-12-05T00:13:39.288Z",
+  "window": {
+    "innerHeight": 508,
+    "innerWidth": 390,
+    "scrollY": 0,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "0px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:39.289Z] LOG: 📱 [VISUAL VIEWPORT] {
+  "height": 508,
+  "width": 390,
+  "offsetTop": 0,
+  "scale": 1
+}
+[2025-12-05T00:13:39.295Z] LOG: 📜 [SCROLL EVENT] {
+  "target": "window",
+  "scrollY": 0,
+  "scrollX": 0
+}
+[2025-12-05T00:13:39.295Z] LOG: 📊 [VIEWPORT - SCROLL] {
+  "label": "SCROLL",
+  "timestamp": "2025-12-05T00:13:39.293Z",
+  "window": {
+    "innerHeight": 508,
+    "innerWidth": 390,
+    "scrollY": 0,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "0px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:39.295Z] LOG: 📜 [SCROLL EVENT] {
+  "target": "window",
+  "scrollY": 0,
+  "scrollX": 0
+}
+[2025-12-05T00:13:39.295Z] LOG: 📊 [VIEWPORT - SCROLL] {
+  "label": "SCROLL",
+  "timestamp": "2025-12-05T00:13:39.293Z",
+  "window": {
+    "innerHeight": 508,
+    "innerWidth": 390,
+    "scrollY": 0,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "0px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:39.295Z] LOG: 📱 [VISUAL VIEWPORT] {
+  "height": 508,
+  "width": 390,
+  "offsetTop": 0,
+  "scale": 1
+}
+[2025-12-05T00:13:39.320Z] LOG: 📍 [ELEMENT POSITIONS - AFTER_500ms] {
+  "timestamp": "2025-12-05T00:13:39.320Z",
+  "chatContainer": {
+    "top": 0,
+    "bottom": 844,
+    "height": 844,
+    "transform": "none",
+    "transition": "none"
+  },
+  "header": {
+    "top": 0,
+    "bottom": 137,
+    "height": 137,
+    "transform": "none",
+    "transition": "none"
+  },
+  "input": {
+    "top": 452,
+    "bottom": 496,
+    "height": 44,
+    "transform": "none",
+    "transition": "none"
+  },
+  "body": {
+    "scrollTop": 0,
+    "classList": [
+      "geist_a71539c9-module__T19VSG__variable",
+      "geist_mono_8d43a2aa-module__8Li5zG__variable",
+      "antialiased",
+      "keyboard-active"
+    ]
+  }
+}
+[2025-12-05T00:13:39.622Z] LOG: 📍 [ELEMENT POSITIONS - AFTER_800ms] {
+  "timestamp": "2025-12-05T00:13:39.619Z",
+  "chatContainer": {
+    "top": 0,
+    "bottom": 844,
+    "height": 844,
+    "transform": "none",
+    "transition": "none"
+  },
+  "header": {
+    "top": 0,
+    "bottom": 137,
+    "height": 137,
+    "transform": "none",
+    "transition": "none"
+  },
+  "input": {
+    "top": 452,
+    "bottom": 496,
+    "height": 44,
+    "transform": "none",
+    "transition": "none"
+  },
+  "body": {
+    "scrollTop": 0,
+    "classList": [
+      "geist_a71539c9-module__T19VSG__variable",
+      "geist_mono_8d43a2aa-module__8Li5zG__variable",
+      "antialiased",
+      "keyboard-active"
+    ]
+  }
+}
+[2025-12-05T00:13:39.737Z] LOG: 📊 [VIEWPORT - FOCUS+1000ms] {
+  "label": "FOCUS+1000ms",
+  "timestamp": "2025-12-05T00:13:39.737Z",
+  "window": {
+    "innerHeight": 508,
+    "innerWidth": 390,
+    "scrollY": 0,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "0px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:39.821Z] LOG: 📍 [ELEMENT POSITIONS - AFTER_1000ms] {
+  "timestamp": "2025-12-05T00:13:39.820Z",
+  "chatContainer": {
+    "top": 0,
+    "bottom": 844,
+    "height": 844,
+    "transform": "none",
+    "transition": "none"
+  },
+  "header": {
+    "top": 0,
+    "bottom": 137,
+    "height": 137,
+    "transform": "none",
+    "transition": "none"
+  },
+  "input": {
+    "top": 452,
+    "bottom": 496,
+    "height": 44,
+    "transform": "none",
+    "transition": "none"
+  },
+  "body": {
+    "scrollTop": 0,
+    "classList": [
+      "geist_a71539c9-module__T19VSG__variable",
+      "geist_mono_8d43a2aa-module__8Li5zG__variable",
+      "antialiased",
+      "keyboard-active"
+    ]
+  }
+}
+[2025-12-05T00:13:40.239Z] LOG: 📊 [VIEWPORT - FOCUS+1500ms] {
+  "label": "FOCUS+1500ms",
+  "timestamp": "2025-12-05T00:13:40.237Z",
+  "window": {
+    "innerHeight": 508,
+    "innerWidth": 390,
+    "scrollY": 0,
+    "scrollX": 0
+  },
+  "css": {
+    "stableHeight": "508px",
+    "viewportHeight": "508px",
+    "safeAreaTop": "47px",
+    "safeAreaBottom": "0px",
+    "contentSafeTop": "46px",
+    "contentSafeBottom": "0px"
+  },
+  "container": {
+    "height": 844,
+    "top": 0,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedTop": "0px",
+    "computedTransition": "none"
+  },
+  "body": {
+    "height": 844,
+    "scrollTop": 0,
+    "computedHeight": "844px",
+    "computedPosition": "fixed"
+  }
+}
+[2025-12-05T00:13:40.321Z] LOG: 📍 [ELEMENT POSITIONS - AFTER_1500ms] {
+  "timestamp": "2025-12-05T00:13:40.320Z",
+  "chatContainer": {
+    "top": 0,
+    "bottom": 844,
+    "height": 844,
+    "transform": "none",
+    "transition": "none"
+  },
+  "header": {
+    "top": 0,
+    "bottom": 137,
+    "height": 137,
+    "transform": "none",
+    "transition": "none"
+  },
+  "input": {
+    "top": 452,
+    "bottom": 496,
+    "height": 44,
+    "transform": "none",
+    "transition": "none"
+  },
+  "body": {
+    "scrollTop": 0,
+    "classList": [
+      "geist_a71539c9-module__T19VSG__variable",
+      "geist_mono_8d43a2aa-module__8Li5zG__variable",
+      "antialiased",
+      "keyboard-active"
+    ]
+  }
+}
+[2025-12-05T00:13:40.741Z] LOG: ⌨️ [INPUT BLUR]
+[2025-12-05T00:13:40.744Z] LOG: ⌨️ [KEYBOARD STATE] {
+  "isKeyboardOpen": false,
+  "isInputFocused": false,
+  "viewportHeight": 508,
+  "initialHeight": 844,
+  "heightRatio": "0.60"
+}
